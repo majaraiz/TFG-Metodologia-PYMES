@@ -1,0 +1,155 @@
+# ================================================================
+# CONFIGURACION SEDE SIMPLE - PLANTILLA GENERICA
+# ================================================================
+# Este archivo debe ser rellenado por el tecnico implementador
+# Contiene todos los parametros especificos de esta sede
+# INSTRUCCIONES: Rellenar todos los valores marcados con "CAMBIAR_XXX"
+
+# ================================================================
+# INFORMACION GENERAL DE LA SEDE
+# ================================================================
+sede:
+  # Identificacion de la sede
+  nombre: "Sede_Alcorcon"      # Ej: "Sede_Madrid", "Oficina_Murcia"
+  numero: 3             # Ej: 1, 2, 3... (debe ser unico)
+  ubicacion: "Alcorcon Espania"     # Ej: "Madrid - España", "Murcia"
+  tipo: "simple"                     # NO CAMBIAR - siempre "simple"
+  
+  # Bloques funcionales a implementar en esta sede
+  bloques_activos:
+    segmentacion: true              # NO CAMBIAR - siempre necesario
+    enrutamiento: true              # NO CAMBIAR - siempre necesario  
+    cifrado: false                # true or false - Cifrado contra sede central
+    qos: false                      # NO CAMBIAR - no implementado aun
+    gestion: false                   # NO CAMBIAR - siempre recomendado
+
+# ================================================================
+# DIRECCIONAMIENTO LAN (por VRF)
+# ================================================================
+direccionamiento:
+  # VRF MAIN - Red corporativa principal
+  main:
+    red_lan: "192.168.3.0/24"      # Ej: "192.168.10.0/24"
+    ip_router: "192.168.3.2"   # Ej: "192.168.10.2" (IP del router)
+    ip_gateway: "192.168.3.1"      # Ej: "192.168.10.1" (gateway usuarios)
+    vlan: 2                         # NO CAMBIAR - estandar metodologia
+    
+  # VRF INVITADOS - Red de invitados  
+  invitados:
+    red_lan: "172.16.3.0/25"       # Ej: "172.16.10.0/25" (red /25 = 128 IPs)
+    ip_router: "172.16.3.2"   # Ej: "172.16.10.2"
+    ip_gateway: "172.16.3.1"      # Ej: "172.16.10.1"
+    vlan: 56                        # NO CAMBIAR - estandar metodologia
+    
+  # VRF GESTION - Red de administracion
+  gestion:
+    red_lan: "172.19.3.0/28"   # Ej: "172.19.10.0/28" (red /28 = 16 IPs)
+    ip_router: "172.19.3.2"   # Ej: "172.19.10.2"
+    ip_gateway: "172.19.3.1"      # Ej: "172.19.10.1"
+    ip_loopback: "172.19.3.20"  # Ej: "172.19.10.20" (para gestion)
+    vlan: 99                        # NO CAMBIAR - estandar metodologia
+
+# ================================================================
+# CONECTIVIDAD WAN (hacia operador MPLS)
+# ================================================================
+wan:
+  # Interfaz fisica WAN del router
+  interfaz_fisica: "FastEthernet1/0"  # CAMBIAR si es diferente
+  
+  # Subinterfaces por VRF (coordinar con operador MPLS)
+  main:
+    vlan: 100                           # CAMBIAR si operador usa otra VLAN
+    ip_router: "10.0.0.31"    # Ej: "10.0.0.21" (IP asignada por operador)
+    mascara: "255.255.255.0"            # CAMBIAR si operador usa otra mascara
+    peer_bgp: "10.0.0.254"        # Ej: "10.0.0.254" (router operador)
+    
+  invitados:
+    vlan: 156                           # CAMBIAR si operador usa otra VLAN
+    ip_router: "10.16.0.31"     # Ej: "10.16.0.21"
+    mascara: "255.255.255.0"            # CAMBIAR si operador usa otra mascara
+    peer_bgp: "10.16.0.254"        # Ej: "10.16.0.254"
+    
+  gestion:
+    vlan: 199                           # CAMBIAR si operador usa otra VLAN
+    ip_router: "10.199.0.31"    # Ej: "10.199.0.21"
+    mascara: "255.255.255.0"            # CAMBIAR si operador usa otra mascara
+    peer_bgp: "10.199.0.254"        # Ej: "10.199.0.254"
+
+# ================================================================
+# CONFIGURACION CIFRADO (solo si bloques_activos.cifrado = true)
+# ================================================================
+cifrado:
+  # Loopback para IPSec (origen tuneles)
+  loopback_ipsec:
+    interfaz: "Loopback55"              # NO CAMBIAR - estandar metodologia
+    ip: "172.26.28.13"              # Ej: "172.26.28.10" (IP unica para IPSec)
+    descripcion: "Origen IPSec VRF main" # NO CAMBIAR
+    
+  # Destinos IPSec (sedes con las que cifrar)
+  destinos:
+    sede_central:
+      nombre: "Sede_Central"            # NO CAMBIAR
+      peers:                            # IPs loopback IPSec de sede central
+        - "172.26.28.25"      # Ej: "172.26.28.25" (router principal)
+        - "172.26.28.26"      # Ej: "172.26.28.26" (router backup)
+      redes_locales:                    # Redes locales a cifrar (formato ACL)
+        - "192.168.3.0 0.0.0.255"      # Ej: "192.168.10.0 0.0.0.255" (VRF main local)
+      redes_remotas:                    # Redes remotas a cifrar (formato ACL)
+        - "192.168.101.0 0.0.0.255"    # Ej: "192.168.101.0 0.0.0.255" (VRF main sede central)
+      crypto_map_id: 2000               # NO CAMBIAR - estandar metodologia
+
+# ================================================================
+# CONFIGURACIONES ESPECIFICAS DE SEDE
+# ================================================================
+configuracion:
+  # Configuracion HSRP para sede simple (sin redundancia)
+  hsrp:
+    tipo_router: "principal"            # NO CAMBIAR - sede simple siempre principal
+    preempt_delay: 60                   # NO CAMBIAR - estandar para sedes remotas
+    
+  # Configuracion BGP especifica
+  bgp:
+    router_id_source: "wan_main"        # NO CAMBIAR - usa IP WAN main como router-id
+    anunciar_default: false             # NO CAMBIAR - solo sede central anuncia
+    metric_local: 100                   # NO CAMBIAR - metrica estandar
+    
+  # Configuracion de interfaces LAN
+  interfaz_lan:
+    fisica: "FastEthernet0/0"           # CAMBIAR si router tiene otra interfaz LAN
+    tipo: "subinterfaces"               # NO CAMBIAR - siempre subinterfaces
+    
+  # Servidores y destinos (normalmente en sede central)
+  destinos:
+    servidor_netflow: "172.19.204.254"    # CAMBIAR si servidor en otra IP
+    servidor_syslog: "172.19.204.254"     # CAMBIAR si servidor en otra IP  
+    servidor_ntp: "172.19.204.254"        # CAMBIAR si servidor en otra IP
+    servidor_snmp: "172.19.204.254"       # CAMBIAR si servidor en otra IP
+
+# ================================================================
+# GUIA RAPIDA PARA EL TECNICO
+# ================================================================
+# PASOS PARA COMPLETAR ESTE ARCHIVO:
+#
+# 1. INFORMACION BASICA:
+#    - Cambiar nombre y ubicacion de la sede
+#    - Asignar numero unico de sede
+#    - Decidir si activar cifrado y gestion (true/false)
+#
+# 2. DIRECCIONAMIENTO LAN:
+#    - Asignar redes IP que NO se solapen con otras sedes
+#    - Usar redes privadas (192.168.x.x, 172.16-31.x.x, 10.x.x.x)
+#    - Respetar mascara /24 para main, /25 para invitados, /28 para gestion
+#
+# 3. CONECTIVIDAD WAN:
+#    - Coordinar con operador MPLS las IPs y VLANs
+#    - Verificar IPs de peers BGP con operador
+#
+# 4. CIFRADO (si esta activo):
+#    - Asignar IP unica para loopback IPSec. Preferible asignarla para futuro
+#    - Obtener IPs IPSec de sede central
+#    - Coordinar configuracion con sede central
+#
+# IMPORTANTE: 
+# - Todas las IPs deben ser unicas en la red
+# - Coordinar numeracion con otras sedes
+# - Si se activa el cifrado, la sede central debe configurarse como peer. Lanzar bloque auxiliar para ello 

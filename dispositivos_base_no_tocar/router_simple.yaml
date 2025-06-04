@@ -1,0 +1,42 @@
+# ================================================================
+# CONFIGURACION ROUTER SEDE SIMPLE - PLANTILLA GENERICA
+# ================================================================
+# Version simplificada para TFG - Todos los routers EVE-NG tienen
+# las mismas capacidades basicas (IPSec, NetFlow, BGP, HSRP)
+
+# ================================================================
+# IDENTIFICACION DEL DISPOSITIVO
+# ================================================================
+router:
+  # Datos basicos del dispositivo
+  hostname: "auto"                      # Se construye automaticamente como: {sede.nombre}_ppal
+  ubicacion: "CAMBIAR_UBICACION"        # Ej: "Rack A", "Armario Principal" (opcional)
+
+# ================================================================
+# INTERFACES FISICAS 
+# ================================================================
+interfaces:
+  # Interfaz LAN hacia switches
+  lan: "CAMBIAR_IF_LAN"                 # Ej: "FastEthernet0/0", "GigabitEthernet0/0"
+  
+  # Interfaz WAN hacia operador  
+  wan: "CAMBIAR_IF_WAN"                 # Ej: "FastEthernet1/0", "Ethernet1/0"
+
+# ================================================================
+# REFERENCIAS A OTROS ARCHIVOS (NO CAMBIAR)
+# ================================================================
+referencias:
+  sede_config: "sede_simple.yaml"      
+  global_config: "global_config.yaml"  
+
+# ================================================================
+# GUIA RAPIDA PARA EL TECNICO  
+# ================================================================
+# SOLO 3 CAMPOS A COMPLETAR:
+#
+# 1. interfaces.lan  - Verificar interfaz LAN del router
+# 2. interfaces.wan  - Verificar interfaz WAN del router  
+# 3. ubicacion       - Opcional, para inventario
+#
+# NOTA: hostname, IPs, VRFs, BGP se heredan automaticamente
+#       de sede_simple.yaml y global_config.yaml

@@ -1,0 +1,304 @@
+{# ================================================================ #}
+{# PLANTILLA JINJA2 - SWITCH ACCESO - CORREGIDA                   #}
+{# ================================================================ #}
+{# Genera configuracion switch de acceso basandose en:             #}
+{# - global_config.yaml (estandares metodologia)                   #}
+{# - sede_simple.yaml (parametros sede)                            #}
+{# - switch_acceso.yaml (datos dispositivo)                        #}
+{# GESTION: Condicional segun sede.bloques_activos.gestion         #}
+{# ================================================================ #}
+
+!
+! ================================================================
+! Metodologia de Automatizacion de Redes para PYMEs - TFG MAJO
+! ================================================================
+! Sede: {{ sede.nombre }}
+! Dispositivo: Switch de Acceso
+! Bloques activos: {% for bloque, activo in sede.bloques_activos.items() %}{% if activo %}{{ bloque }} {% endif %}{% endfor %}
+! Fecha generacion: {{ fecha_generacion }}
+! ================================================================
+!
+version 15.2
+service timestamps debug {{ global_config.networking.services.timestamps_debug }}
+service timestamps log {{ global_config.networking.services.timestamps_log }}
+{% if global_config.networking.services.password_encryption %}
+service password-encryption
+{% endif %}
+{% if global_config.networking.services.compress_config %}
+service compress-config
+{% endif %}
+!
+hostname {{ sede.nombre | replace(" ", "_") }}_Switch
+!
+boot-start-marker
+boot-end-marker
+!
+!
+{% if sede.bloques_activos.gestion %}
+{# ================================================================ #}
+{# BLOQUE GESTION - CONFIGURACION BASICA                           #}
+{# ================================================================ #}
+!
+! ================================================================
+! IMPORTANTE: Ejecutar manualmente antes de usar SSH:
+! ================================================================
+! crypto key generate rsa modulus 1024
+! ================================================================
+!
+!
+logging buffered {{ global_config.gestion.syslog.levels.buffered }}
+logging console {{ global_config.gestion.syslog.levels.console }}
+logging monitor {{ global_config.gestion.syslog.levels.monitor }}
+enable secret {{ global_config.gestion.enable_secrets.switches }}
+!
+username {{ global_config.gestion.usuarios.admin.username }} privilege {{ global_config.gestion.usuarios.admin.privilege }} secret {{ global_config.gestion.usuarios.admin.password }}
+aaa new-model
+!
+!
+aaa authentication login default local
+!
+!
+!
+!
+!
+!
+aaa session-id common
+{% else %}
+{# ================================================================ #}
+{# SIN GESTION - SOLO ENABLE SECRET                                #}
+{# ================================================================ #}
+enable secret {{ global_config.gestion.enable_secrets.switches }}
+{% endif %}
+!
+!
+!
+!
+!
+vtp mode transparent
+!
+!
+!
+ip domain-name {{ global_config.networking.basics.domain_name }}
+{% if global_config.networking.basics.ip_cef %}
+ip cef
+{% endif %}
+{% if not global_config.networking.basics.ipv6_cef %}
+no ipv6 cef
+{% endif %}
+!
+!
+!
+spanning-tree mode {{ global_config.spanning_tree.mode }}
+{% if global_config.spanning_tree.portfast_edge_bpduguard %}
+spanning-tree portfast edge bpduguard default
+{% endif %}
+{% if global_config.spanning_tree.extend_system_id %}
+spanning-tree extend system-id
+{% endif %}
+spanning-tree vlan {% for vrf_name, vrf_config in global_config.segmentacion.vrfs.items() %}{{ vrf_config.vlan }}{% if not loop.last %},{% endif %}{% endfor %} priority {{ global_config.spanning_tree.prioridades.acceso }}
+!
+!
+{# ================================================================ #}
+{# VLANs - BLOQUE SEGMENTACION (siempre presente)                  #}
+{# ================================================================ #}
+{% for vrf_name, vrf_config in global_config.segmentacion.vrfs.items() %}
+vlan {{ vrf_config.vlan }}
+ name {{ vrf_config.nombre }}
+!
+{% endfor %}
+vlan {{ global_config.segmentacion.vlan_nativa.id }}
+ name {{ global_config.segmentacion.vlan_nativa.nombre }}
+{% if global_config.segmentacion.vlan_nativa.shutdown %}
+ shutdown
+{% endif %}
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+{# ================================================================ #}
+{# INTERFACES - TRUNK HACIA ROUTER (siempre presente)              #}
+{# ================================================================ #}
+interface {{ interfaces.trunk.hacia_router }}
+ description Conexion hacia router {{ sede.nombre | replace(" ", "_") }}_ppal
+ switchport trunk encapsulation dot1q
+ switchport trunk allowed vlan {% for vrf_name, vrf_config in global_config.segmentacion.vrfs.items() %}{{ vrf_config.vlan }}{% if not loop.last %},{% endif %}{% endfor %}
+
+ switchport trunk native vlan {{ global_config.segmentacion.vlan_nativa.id }}
+ switchport mode trunk
+ switchport nonegotiate
+!
+{# ================================================================ #}
+{# INTERFACES - PUERTOS NO UTILIZADOS (siempre presente)           #}
+{# ================================================================ #}
+interface Ethernet0/1
+ description Puerto no utilizado
+ shutdown
+!
+interface Ethernet0/2
+ description Puerto no utilizado
+ shutdown
+!
+interface Ethernet0/3
+ description Puerto no utilizado
+ shutdown
+ no cdp enable
+!
+{# ================================================================ #}
+{# INTERFACES - PUERTOS DE ACCESO PARA USUARIOS (siempre presente) #}
+{# ================================================================ #}
+{# Distribucion automatica: 50% VLAN main, 50% VLAN invitados #}
+{% set rango_completo = interfaces.acceso.rango_usuarios %}
+{% set rango_parts = rango_completo.split('-') %}
+{% set interfaz_base = rango_parts[0].split('/')[0] %}
+{% set puerto_inicio = rango_parts[0].split('/')[1] | int %}
+{% set puerto_fin = rango_parts[1] | int %}
+{% set total_puertos = puerto_fin - puerto_inicio + 1 %}
+{% set puertos_main = (total_puertos / 2) | int %}
+
+{# Puertos para VLAN main (corporativo) #}
+{% for i in range(puerto_inicio, puerto_inicio + puertos_main) %}
+interface {{ interfaz_base }}/{{ i }}
+ description PC - VLAN {{ global_config.segmentacion.vrfs.main.vlan }}
+ switchport access vlan {{ global_config.segmentacion.vrfs.main.vlan }}
+ switchport mode access
+{% if global_config.seguridad.port_security.maximum %}
+ switchport port-security maximum {{ global_config.seguridad.port_security.maximum }}
+{% endif %}
+{% if global_config.seguridad.port_security.mac_address_sticky %}
+ switchport port-security mac-address sticky
+{% endif %}
+ switchport port-security
+ no lldp transmit
+ no lldp receive
+ no cdp enable
+ spanning-tree portfast edge
+ spanning-tree bpdufilter enable
+!
+{% endfor %}
+
+{# Puertos para VLAN invitados #}
+{% for i in range(puerto_inicio + puertos_main, puerto_fin + 1) %}
+interface {{ interfaz_base }}/{{ i }}
+ description PC - VLAN {{ global_config.segmentacion.vrfs.invitados.vlan }}
+ switchport access vlan {{ global_config.segmentacion.vrfs.invitados.vlan }}
+ switchport mode access
+{% if global_config.seguridad.port_security.maximum %}
+ switchport port-security maximum {{ global_config.seguridad.port_security.maximum }}
+{% endif %}
+{% if global_config.seguridad.port_security.mac_address_sticky %}
+ switchport port-security mac-address sticky
+{% endif %}
+ switchport port-security
+ no lldp transmit
+ no lldp receive
+ no cdp enable
+ spanning-tree portfast edge
+ spanning-tree bpdufilter enable
+!
+{% endfor %}
+
+{% if sede.bloques_activos.gestion %}
+{# ================================================================ #}
+{# BLOQUE GESTION - INTERFAZ Y CONECTIVIDAD                        #}
+{# ================================================================ #}
+interface Vlan{{ global_config.segmentacion.vrfs.gestion.vlan }}
+ ip address {{ direccionamiento.gestion.ip_router | next_ip }} {{ direccionamiento.gestion.red_lan | get_netmask_from_cidr_network }}
+ ip access-group ACL-MGMT in
+ no shutdown
+!
+ip default-gateway {{ direccionamiento.gestion.ip_gateway }}
+ip forward-protocol nd
+!
+no ip http server
+!
+ip ssh version {{ global_config.gestion.ssh.version }}
+ip ssh server algorithm encryption aes128-ctr aes256-ctr aes128-cbc 3des-cbc aes192-cbc aes256-cbc
+ip ssh client algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+!
+{# ================================================================ #}
+{# BLOQUE GESTION - ACCESS LISTS                                   #}
+{# ================================================================ #}
+ip access-list standard SNMP-RO-ACL
+ permit {{ configuracion.destinos.servidor_snmp }}
+ permit {{ direccionamiento.gestion.red_lan | cidr_to_acl }}
+ deny   any log
+!
+ip access-list extended ACL-MGMT
+ remark --- PERMITIR SSH desde routers sede ---
+ permit tcp host {{ direccionamiento.gestion.ip_router }} {{ direccionamiento.gestion.red_lan | cidr_to_acl }} eq 22
+ remark --- PERMITIR SSH desde servidor ficticio ---
+ permit tcp host {{ configuracion.destinos.servidor_syslog }} {{ direccionamiento.gestion.red_lan | cidr_to_acl }} eq 22
+ deny   ip any any log
+!
+{# ================================================================ #}
+{# BLOQUE GESTION - LOGGING                                        #}
+{# ================================================================ #}
+logging facility {{ global_config.gestion.syslog.facility }}
+logging source-interface Vlan{{ global_config.segmentacion.vrfs.gestion.vlan }}
+logging host {{ configuracion.destinos.servidor_syslog }}
+!
+!
+{# ================================================================ #}
+{# BLOQUE GESTION - SNMP                                           #}
+{# ================================================================ #}
+snmp-server community {{ global_config.gestion.snmp.communities.readonly }} RO SNMP-RO-ACL
+snmp-server trap-source Vlan{{ global_config.segmentacion.vrfs.gestion.vlan }}
+snmp-server location Sede_{{ sede.numero }}_Switch_Acceso
+snmp-server contact {{ global_config.gestion.snmp.contact }}
+snmp-server chassis-id {{ sede.nombre | replace(" ", "_") }}_Switch
+snmp-server enable traps snmp linkdown linkup
+snmp-server host {{ configuracion.destinos.servidor_snmp }} version {{ global_config.gestion.snmp.version }} {{ global_config.gestion.snmp.communities.readonly }}
+!
+!
+!
+control-plane
+!
+{# ================================================================ #}
+{# BLOQUE GESTION - BANNER Y ACCESO REMOTO                         #}
+{# ================================================================ #}
+banner motd ^C{{ global_config.networking.banner_motd }}^C
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ access-class ACL-MGMT in
+ exec-timeout {{ global_config.gestion.ssh.timeout }} 0
+ transport input ssh
+!
+{# ================================================================ #}
+{# BLOQUE GESTION - NTP                                            #}
+{# ================================================================ #}
+ntp server {{ configuracion.destinos.servidor_ntp }}
+{% else %}
+{# ================================================================ #}
+{# SIN GESTION - CONFIGURACION MINIMA                              #}
+{# ================================================================ #}
+interface Vlan{{ global_config.segmentacion.vrfs.gestion.vlan }}
+ ip address {{ direccionamiento.gestion.ip_router | next_ip }} {{ direccionamiento.gestion.red_lan | get_netmask_from_cidr_network }}
+ no shutdown
+!
+ip default-gateway {{ direccionamiento.gestion.ip_gateway }}
+!
+no ip http server
+!
+control-plane
+!
+line con 0
+line aux 0
+line vty 0 4
+ exec-timeout 0 0
+{% endif %}
+!
+!
+end

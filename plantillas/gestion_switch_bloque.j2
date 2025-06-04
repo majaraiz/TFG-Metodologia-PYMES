@@ -1,0 +1,100 @@
+!
+! ================================================================
+! CONFIGURACION GESTION INCREMENTAL - SWITCH {{ sede.nombre }}
+! ================================================================
+! Copiar y pegar estos comandos para añadir gestión completa:
+!
+! IMPORTANTE: Ejecutar PRIMERO manualmente estos comandos:
+! enable
+! configure terminal
+! crypto key generate rsa modulus 1024
+! exit
+! copy running-config startup-config
+!
+! DESPUES aplicar la configuracion que sigue:
+!
+enable secret {{ global_config.gestion.enable_secrets.switches }}
+!
+username {{ global_config.gestion.usuarios.admin.username }} privilege {{ global_config.gestion.usuarios.admin.privilege }} secret {{ global_config.gestion.usuarios.admin.password }}
+aaa new-model
+!
+!
+aaa authentication login default local
+!
+!
+!
+!
+!
+!
+aaa session-id common
+!
+ip ssh version {{ global_config.gestion.ssh.version }}
+ip ssh server algorithm encryption aes128-ctr aes256-ctr aes128-cbc 3des-cbc aes192-cbc aes256-cbc
+ip ssh client algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+!
+! ================================================================
+! CONFIGURACION LOGGING
+! ================================================================
+logging buffered {{ global_config.gestion.syslog.levels.buffered }}
+logging console {{ global_config.gestion.syslog.levels.console }}
+logging monitor {{ global_config.gestion.syslog.levels.monitor }}
+logging facility {{ global_config.gestion.syslog.facility }}
+logging source-interface Vlan{{ global_config.segmentacion.vrfs.gestion.vlan }}
+logging host {{ configuracion.destinos.servidor_syslog }}
+!
+! ================================================================
+! ACCESS LISTS DE GESTION
+! ================================================================
+ip access-list standard SNMP-RO-ACL
+ permit {{ configuracion.destinos.servidor_snmp }}
+ permit {{ direccionamiento.gestion.red_lan | cidr_to_acl }}
+ deny   any log
+!
+ip access-list extended ACL-MGMT
+ remark --- PERMITIR SSH desde routers sede ---
+ permit tcp host {{ direccionamiento.gestion.ip_router }} {{ direccionamiento.gestion.red_lan | cidr_to_acl }} eq 22
+ remark --- PERMITIR SSH desde servidor ficticio ---
+ permit tcp host {{ configuracion.destinos.servidor_syslog }} {{ direccionamiento.gestion.red_lan | cidr_to_acl }} eq 22
+ deny   ip any any log
+!
+! ================================================================
+! CONFIGURACION SNMP
+! ================================================================
+snmp-server community {{ global_config.gestion.snmp.communities.readonly }} RO SNMP-RO-ACL
+snmp-server trap-source Vlan{{ global_config.segmentacion.vrfs.gestion.vlan }}
+snmp-server location Sede_{{ sede.numero }}_Switch_Acceso
+snmp-server contact {{ global_config.gestion.snmp.contact }}
+snmp-server chassis-id {{ sede.nombre | replace(" ", "_") }}_Switch
+snmp-server enable traps snmp linkdown linkup
+snmp-server host {{ configuracion.destinos.servidor_snmp }} version {{ global_config.gestion.snmp.version }} {{ global_config.gestion.snmp.communities.readonly }}
+!
+! ================================================================
+! INTERFAZ DE GESTION (si no existe)
+! ================================================================
+interface Vlan{{ global_config.segmentacion.vrfs.gestion.vlan }}
+ ip address {{ direccionamiento.gestion.ip_router | next_ip }} {{ direccionamiento.gestion.red_lan | get_netmask_from_cidr_network }}
+ ip access-group ACL-MGMT in
+!
+ip default-gateway {{ direccionamiento.gestion.ip_gateway }}
+!
+! ================================================================
+! BANNER Y ACCESO REMOTO
+! ================================================================
+banner motd ^C{{ global_config.networking.banner_motd }}^C
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ access-class ACL-MGMT in
+ exec-timeout {{ global_config.gestion.ssh.timeout }} 0
+ transport input ssh
+!
+! ================================================================
+! CONFIGURACION NTP
+! ================================================================
+ntp server {{ configuracion.destinos.servidor_ntp }}
+!
+! ================================================================
+! FIN CONFIGURACION GESTION SWITCH - Aplicar con copy running-config startup-config
+! ================================================================

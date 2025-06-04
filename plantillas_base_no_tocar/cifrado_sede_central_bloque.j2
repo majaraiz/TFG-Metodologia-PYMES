@@ -1,0 +1,26 @@
+!
+! ================================================================
+! CONFIGURACION SEDE CENTRAL - Agregar cifrado para: {{ sede.nombre }}
+! ================================================================
+! Aplicar en AMBOS routers de sede central (principal + backup)
+!
+crypto keyring CLAVE1 vrf main
+  pre-shared-key address {{ cifrado.loopback_ipsec.ip }} key {{ global_config.cifrado.psk }}
+!
+crypto isakmp profile PERFIL1
+   match identity address {{ cifrado.loopback_ipsec.ip }} 255.255.255.255 main
+!
+crypto map mapacifrado {{ 2000 + sede.numero }} ipsec-isakmp
+ description Tunel IPSec VRF main contra {{ sede.nombre }}
+ set peer {{ cifrado.loopback_ipsec.ip }}
+ set security-association idle-time 600
+ set transform-set transformada
+ set isakmp-profile PERFIL1
+ match address {{ 2000 + sede.numero }}
+!
+access-list {{ 2000 + sede.numero }} remark === TUNEL IPSEC VRF main: Sede Central hacia {{ sede.nombre }} ===
+access-list {{ 2000 + sede.numero }} permit ip 192.168.101.0 0.0.0.255 {{ direccionamiento.main.red_lan | cidr_to_acl }}
+!
+! ================================================================
+! FIN - Aplicar con copy running-config startup-config
+! ================================================================

@@ -1,0 +1,66 @@
+# ================================================================
+# CONFIGURACION SWITCH ACCESO - PLANTILLA GENERICA
+# ================================================================
+# Version simplificada para TFG - Todos los switches EVE-NG tienen
+# las mismas capacidades basicas (VLANs, Spanning Tree, Port Security)
+
+# ================================================================
+# IDENTIFICACION DEL DISPOSITIVO
+# ================================================================
+switch:
+  # Datos basicos del dispositivo
+  hostname: "auto"                      # Se construye automaticamente como: Switch_{sede.nombre}
+  ubicacion: "CAMBIAR_UBICACION"        # Ej: "Planta 1", "Sala Tecnica" (opcional)
+
+# ================================================================
+# INTERFACES FISICAS
+# ================================================================
+interfaces:
+  # Conexiones trunk hacia routers
+  trunk:
+    hacia_router: "CAMBIAR_IF_ROUTER"   # Ej: "Ethernet0/0", "FastEthernet0/1"
+    # NOTA: Si sede tiene 2 routers (redundante), se añadirá automaticamente segunda interfaz
+  
+  # Puertos de acceso para usuarios (rango)
+  acceso:
+    rango_usuarios: "CAMBIAR_RANGO"     # Ej: "Ethernet1/0-3", "FastEthernet1/0-7"
+    # NOTA: Se distribuirán automaticamente entre VLANs main e invitados al 50%
+
+# ================================================================
+# CONFIGURACION ESPECIFICA
+# ================================================================
+configuracion:
+  # IP de gestion (se hereda automaticamente)
+  ip_gestion: "auto"                    # Calculada desde direccionamiento.gestion de sede
+  
+  # Spanning Tree (para sedes con redundancia)
+  spanning_tree_priority: "auto"       # Calculado segun tipo de sede
+
+# ================================================================
+# REFERENCIAS A OTROS ARCHIVOS (NO CAMBIAR)
+# ================================================================
+referencias:
+  sede_config: "sede_simple.yaml"      
+  global_config: "global_config.yaml"  
+
+# ================================================================
+# GUIA RAPIDA PARA EL TECNICO  
+# ================================================================
+# SOLO 3 CAMPOS A COMPLETAR:
+#
+# 1. interfaces.trunk.hacia_router  - Interfaz conectada al router
+# 2. interfaces.acceso.rango_usuarios - Rango de puertos para usuarios
+# 3. ubicacion - Opcional, para inventario
+#
+# EJEMPLOS DE RANGOS:
+# - "Ethernet1/0-3" = 4 puertos (1/0, 1/1, 1/2, 1/3)
+# - "FastEthernet0/1-8" = 8 puertos
+# - "GigabitEthernet1/0-1" = 2 puertos
+#
+# DISTRIBUCION AUTOMATICA:
+# - 50% puertos para VLAN main (corporativo)
+# - 50% puertos para VLAN invitados
+# - VLAN gestion solo en interfaz de gestion
+#
+# NOTA: VLANs, IPs, ACLs se heredan automaticamente
+#       de sede_simple.yaml y global_config.yaml

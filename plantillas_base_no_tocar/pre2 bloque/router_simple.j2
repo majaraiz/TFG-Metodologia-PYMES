@@ -1,0 +1,359 @@
+{# ================================================================ #}
+{# PLANTILLA JINJA2 - ROUTER SEDE SIMPLE                           #}
+{# ================================================================ #}
+{# Genera configuracion completa del router basandose en:          #}
+{# - global_config.yaml (estandares metodologia)                   #}
+{# - sede_simple.yaml (parametros sede)                            #}
+{# - router_simple.yaml (datos dispositivo)                        #}
+{# ================================================================ #}
+
+!
+! ================================================================
+! Metodologia de Automatizacion de Redes para PYMEs - TFG MAJO
+! ================================================================
+! Sede: {{ sede.nombre }}
+! Tipo: {{ sede.tipo }}
+! Bloques activos: {% for bloque, activo in sede.bloques_activos.items() %}{% if activo %}{{ bloque }} {% endif %}{% endfor %}
+! Fecha generacion: {{ fecha_generacion }}
+! ================================================================
+!
+upgrade fpd auto
+version 15.3
+service timestamps debug {{ global_config.networking.services.timestamps_debug }}
+service timestamps log {{ global_config.networking.services.timestamps_log }}
+{% if global_config.networking.services.password_encryption %}
+service password-encryption
+{% endif %}
+{% if global_config.networking.services.sequence_numbers %}
+service sequence-numbers
+{% endif %}
+
+!
+hostname {{ sede.nombre | replace(" ", "_") }}_ppal
+!
+boot-start-marker
+boot-end-marker
+!
+aqm-register-fnf
+!
+logging buffered {{ global_config.gestion.syslog.levels.buffered }}
+logging console {{ global_config.gestion.syslog.levels.console }}
+logging monitor {{ global_config.gestion.syslog.levels.monitor }}
+enable secret {{ global_config.gestion.enable_secrets.routers }}
+!
+aaa new-model
+!
+!
+aaa authentication login default local
+!
+!
+!
+!
+!
+aaa session-id common
+!
+{# ================================================================ #}
+{# VRFs - BLOQUE SEGMENTACION                                      #}
+{# ================================================================ #}
+!
+{% for vrf_name, vrf_config in global_config.segmentacion.vrfs.items() %}
+ip vrf {{ vrf_name }}
+ rd {{ vrf_config.rd }}
+ route-target export {{ vrf_config.rt_export }}
+ route-target import {{ vrf_config.rt_import }}
+!
+{% endfor %}
+!
+!
+!
+ip domain name {{ global_config.networking.basics.domain_name }}
+{% if global_config.networking.basics.ip_cef %}
+ip cef
+{% endif %}
+{% if not global_config.networking.basics.ipv6_cef %}
+no ipv6 cef
+{% endif %}
+
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+username {{ global_config.gestion.usuarios.admin.username }} privilege {{ global_config.gestion.usuarios.admin.privilege }} secret {{ global_config.gestion.usuarios.admin.password }}
+!
+redundancy
+!
+!
+track 1 interface {{ interfaces.wan }} line-protocol
+ delay down {{ global_config.enrutamiento.hsrp.track_delay_down }} up {{ global_config.enrutamiento.hsrp.track_delay_up }}
+!
+ip ssh version {{ global_config.gestion.ssh.version }}
+!
+{# ================================================================ #}
+{# CIFRADO - BLOQUE CIFRADO (si esta activo)                       #}
+{# ================================================================ #}
+{% if sede.bloques_activos.cifrado %}
+crypto keyring CLAVE{{ global_config.segmentacion.vrfs.main.nombre }} vrf {{ global_config.segmentacion.vrfs.main.nombre }}
+{% for peer in cifrado.destinos.sede_central.peers %}
+  pre-shared-key address {{ peer }} key {{ global_config.cifrado.psk }}
+{% endfor %}
+!
+crypto isakmp policy {{ global_config.cifrado.isakmp.policy_id }}
+ encr {{ global_config.cifrado.isakmp.encryption }}
+ hash {{ global_config.cifrado.isakmp.hash }}
+ authentication {{ global_config.cifrado.isakmp.authentication }}
+ lifetime {{ global_config.cifrado.isakmp.lifetime }}
+crypto isakmp keepalive {{ global_config.cifrado.isakmp.keepalive }}
+crypto isakmp profile PERFIL{{ global_config.segmentacion.vrfs.main.nombre }}
+   vrf {{ global_config.segmentacion.vrfs.main.nombre }}
+   keyring CLAVE{{ global_config.segmentacion.vrfs.main.nombre }}
+{% for peer in cifrado.destinos.sede_central.peers %}
+   match identity address {{ peer }} 255.255.255.255 {{ global_config.segmentacion.vrfs.main.nombre }}
+{% endfor %}
+   keepalive {{ global_config.cifrado.isakmp.keepalive }} retry {{ global_config.cifrado.isakmp.keepalive_retry }}
+!
+crypto ipsec security-association lifetime seconds {{ global_config.cifrado.ipsec.lifetime }}
+crypto ipsec security-association replay disable
+!
+crypto ipsec transform-set {{ global_config.cifrado.ipsec.transform_set }} {{ global_config.cifrado.ipsec.esp_encryption }} {{ global_config.cifrado.ipsec.esp_authentication }}
+ mode {{ global_config.cifrado.ipsec.mode }}
+crypto ipsec df-bit clear
+!
+!
+!
+crypto map mapacifrado local-address {{ cifrado.loopback_ipsec.interfaz }}
+crypto map mapacifrado {{ cifrado.destinos.sede_central.crypto_map_id }} ipsec-isakmp
+ description Tunel IPSec VRF {{ global_config.segmentacion.vrfs.main.nombre }} contra {{ cifrado.destinos.sede_central.nombre }}
+{% for peer in cifrado.destinos.sede_central.peers %}
+ set peer {{ peer }}
+{% endfor %}
+ set security-association idle-time {{ global_config.cifrado.ipsec.idle_time }}
+ set transform-set {{ global_config.cifrado.ipsec.transform_set }}
+ set isakmp-profile PERFIL{{ global_config.segmentacion.vrfs.main.nombre }}
+ match address {{ cifrado.destinos.sede_central.crypto_map_id }}
+!
+{% endif %}
+!
+!
+!
+!
+!
+{# ================================================================ #}
+{# INTERFACES - LOOPBACKS                                          #}
+{# ================================================================ #}
+!
+interface Loopback0
+ description Loopback gestion - {{ sede.nombre }}
+ ip vrf forwarding {{ global_config.segmentacion.vrfs.gestion.nombre }}
+ ip address {{ direccionamiento.gestion.ip_loopback }} 255.255.255.255
+!
+{% if sede.bloques_activos.cifrado %}
+interface {{ cifrado.loopback_ipsec.interfaz }}
+ description {{ cifrado.loopback_ipsec.descripcion }}
+ ip vrf forwarding {{ global_config.segmentacion.vrfs.main.nombre }}
+ ip address {{ cifrado.loopback_ipsec.ip }} 255.255.255.255
+!
+{% endif %}
+{# ================================================================ #}
+{# INTERFACES - LAN CON SUBINTERFACES                              #}
+{# ================================================================ #}
+interface {{ interfaces.lan }} 
+ description LAN
+ no ip address
+ duplex full
+ no shutdown
+!
+{% for vrf_name, vrf_config in global_config.segmentacion.vrfs.items() %}
+interface {{ interfaces.lan }}.{{ vrf_config.vlan }}
+ description Subinterfaz LAN VRF {{ vrf_name }}
+ encapsulation dot1Q {{ vrf_config.vlan }}
+ ip vrf forwarding {{ vrf_name }}
+ ip address {{ direccionamiento[vrf_name].ip_router }} {{ direccionamiento[vrf_name].red_lan | get_netmask_from_cidr_network }}
+{% if vrf_name == 'invitados' %}
+ ip access-group ACL_IN_INVITADOS in
+{% endif %}
+ ip flow ingress
+ standby {{ vrf_config.vlan }} ip {{ direccionamiento[vrf_name].ip_gateway }}
+ standby {{ vrf_config.vlan }} priority {{ global_config.enrutamiento.hsrp.prioridades[configuracion.hsrp.tipo_router] }}
+ standby {{ vrf_config.vlan }} preempt delay minimum {{ configuracion.hsrp.preempt_delay }}
+ standby {{ vrf_config.vlan }} name HSRP-{{ vrf_name }}
+ standby {{ vrf_config.vlan }} track 1 decrement {{ global_config.enrutamiento.hsrp.track_decrement }}
+ no shutdown
+!
+{% endfor %}
+{# ================================================================ #}
+{# INTERFACES - WAN CON SUBINTERFACES                              #}
+{# ================================================================ #}
+interface {{ interfaces.wan }} 
+ description WAN
+ no ip address
+ duplex full
+ no shutdown
+!
+{% for vrf_name, vrf_config in global_config.segmentacion.vrfs.items() %}
+interface {{ interfaces.wan }}.{{ wan[vrf_name].vlan }}
+ description Subinterfaz WAN VRF {{ vrf_name }} - Conexion MPLS Operador
+ encapsulation dot1Q {{ wan[vrf_name].vlan }}
+ ip vrf forwarding {{ vrf_name }}
+ ip address {{ wan[vrf_name].ip_router }} {{ wan[vrf_name].mascara }}
+ ip flow ingress
+{% if sede.bloques_activos.cifrado and vrf_name == 'main' %}
+ crypto map mapacifrado
+{% endif %}
+ no shutdown
+!
+{% endfor %}
+{# ================================================================ #}
+{# BGP - BLOQUE ENRUTAMIENTO                                       #}
+{# ================================================================ #}
+router bgp {{ global_config.enrutamiento.bgp.as_number }}
+ bgp router-id {{ wan.main.ip_router }}
+ bgp log-neighbor-changes
+ no bgp default ipv4-unicast
+ !
+{% for vrf_name, vrf_config in global_config.segmentacion.vrfs.items() %}
+ address-family ipv4 vrf {{ vrf_name }}
+{% for redistribution in global_config.enrutamiento.bgp.vrfs[vrf_name].redistribucion %}
+  redistribute {{ redistribution }}
+{% endfor %}
+  neighbor Nube_{{ vrf_name }} peer-group
+  neighbor Nube_{{ vrf_name }} remote-as {{ global_config.enrutamiento.bgp.as_number }}
+  neighbor Nube_{{ vrf_name }} timers {{ global_config.enrutamiento.bgp.timers.keepalive }} {{ global_config.enrutamiento.bgp.timers.holdtime }}
+  neighbor Nube_{{ vrf_name }} route-map BGPOUT_{{ vrf_name }} out
+  neighbor {{ wan[vrf_name].peer_bgp }} peer-group Nube_{{ vrf_name }}
+  neighbor {{ wan[vrf_name].peer_bgp }} activate
+ exit-address-family
+ !
+{% endfor %}
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+ip flow-export source Loopback0
+ip flow-export version 9
+ip flow-export destination {{ configuracion.destinos.servidor_netflow }} 2055
+!
+!
+{# ================================================================ #}
+{# ACCESS LISTS                                                    #}
+{# ================================================================ #}
+ip access-list standard SNMP-RO-ACL
+ permit {{ configuracion.destinos.servidor_snmp }}
+ deny   any log
+ip access-list standard SNMP-RW-ACL
+ permit {{ configuracion.destinos.servidor_snmp }}
+ deny   any log
+!
+ip access-list extended ACL-MGMT
+ remark --- PERMITIR SSH desde servidor gestion centralizado ---
+ permit tcp host {{ configuracion.destinos.servidor_syslog }} any eq 22 log
+ deny   ip any any log
+ip access-list extended ACL_IN_INVITADOS
+ remark --- PERMITIR HSRP entre routers ---
+ permit udp any host 224.0.0.2 eq 1985
+ permit udp any any eq 1985
+ remark --- DENEGAR acceso a redes corporativas ---
+ deny   ip {{ direccionamiento.invitados.red_lan | cidr_to_acl }} 192.168.0.0 0.0.255.255
+ remark --- DENEGAR acceso a redes de gestion ---
+ deny   ip {{ direccionamiento.invitados.red_lan | cidr_to_acl }} 172.19.0.0 0.0.255.255
+ remark --- DENEGAR acceso a otras redes de invitados ---
+ deny   ip {{ direccionamiento.invitados.red_lan | cidr_to_acl }} 172.16.0.0 0.0.255.255
+ remark --- DENEGAR acceso a redes internas del operador ---
+ deny   ip {{ direccionamiento.invitados.red_lan | cidr_to_acl }} 10.0.0.0 0.255.255.255
+ remark --- PERMITIR solo salida a Internet ---
+ permit ip any any
+!
+!
+{# ================================================================ #}
+{# PREFIX LISTS Y ROUTE MAPS                                       #}
+{# ================================================================ #}
+{% for vrf_name, vrf_config in global_config.segmentacion.vrfs.items() %}
+ip prefix-list REDESCLIENTE_{{ vrf_name }} seq 10 permit {{ direccionamiento[vrf_name].red_lan }}
+{% if vrf_name == 'gestion' %}
+ip prefix-list REDESCLIENTE_{{ vrf_name }} seq 20 permit {{ direccionamiento.gestion.ip_loopback }}/32
+{% endif %}
+{% if vrf_name == 'main' and sede.bloques_activos.cifrado %}
+ip prefix-list REDESCLIENTE_{{ vrf_name }} seq 30 permit {{ cifrado.loopback_ipsec.ip }}/32
+{% endif %}
+{% endfor %}
+logging facility {{ global_config.gestion.syslog.facility }}
+logging source-interface Loopback0 vrf {{ global_config.segmentacion.vrfs.gestion.nombre }}
+logging host {{ configuracion.destinos.servidor_syslog }}
+!
+{% for vrf_name in global_config.segmentacion.vrfs.keys() %}
+route-map BGPOUT_{{ vrf_name }} permit 10
+ match ip address prefix-list REDESCLIENTE_{{ vrf_name }}
+ set metric {{ configuracion.bgp.metric_local }}
+!
+{% endfor %}
+route-map BGPOUT_main deny 20
+!
+{# ================================================================ #}
+{# CONFIGURACION SNMP                                              #}
+{# ================================================================ #}
+snmp-server community {{ global_config.gestion.snmp.communities.readonly }} RO SNMP-RO-ACL
+snmp-server community {{ global_config.gestion.snmp.communities.readwrite }} RW SNMP-RW-ACL
+snmp-server location Sede_{{ sede.numero }}_Router_principal
+snmp-server contact {{ global_config.gestion.snmp.contact }}
+snmp-server chassis-id {{ sede.nombre | replace(" ", "_") }}_ppal
+{% for trap in global_config.gestion.snmp.traps %}
+snmp-server enable traps {{ trap }}
+{% endfor %}
+no snmp-server enable traps entity-sensor threshold
+snmp-server host {{ configuracion.destinos.servidor_snmp }} version {{ global_config.gestion.snmp.version }} {{ global_config.gestion.snmp.communities.readonly }}
+!
+{# ================================================================ #}
+{# ACCESS LISTS PARA CIFRADO (si esta activo)                     #}
+{# ================================================================ #}
+{% if sede.bloques_activos.cifrado %}
+{% for red_local in cifrado.destinos.sede_central.redes_locales %}
+{% for red_remota in cifrado.destinos.sede_central.redes_remotas %}
+access-list {{ cifrado.destinos.sede_central.crypto_map_id }} permit ip {{ red_local }} {{ red_remota }}
+{% endfor %}
+{% endfor %}
+!
+{% endif %}
+!
+!
+!
+control-plane
+!
+!
+mgcp behavior rsip-range tgcp-only
+mgcp behavior comedia-role none
+mgcp behavior comedia-check-media-src disable
+mgcp behavior comedia-sdp-force disable
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+banner motd ^C{{ global_config.networking.banner_motd }}^C
+!
+line con 0
+ stopbits 1
+line aux 0
+ stopbits 1
+line vty 0 4
+ access-class ACL-MGMT in
+ exec-timeout {{ global_config.gestion.ssh.timeout }} 0
+ transport input ssh
+!
+ntp authentication-key {{ global_config.gestion.ntp.authentication_key }} md5 {{ global_config.gestion.ntp.key_string }} 7
+ntp authenticate
+ntp trusted-key {{ global_config.gestion.ntp.authentication_key }}
+ntp source Loopback0
+ntp update-calendar
+ntp server vrf {{ global_config.segmentacion.vrfs.gestion.nombre }} {{ configuracion.destinos.servidor_ntp }} prefer
+!
+end

@@ -1,0 +1,128 @@
+!
+! ================================================================
+! CONFIGURACION GESTION INCREMENTAL - ROUTER {{ sede.nombre }}
+! ================================================================
+! Copiar y pegar estos comandos para añadir gestión completa:
+!
+! IMPORTANTE: Ejecutar PRIMERO manualmente estos comandos:
+! enable
+! configure terminal
+! crypto key generate rsa modulus 1024
+! exit
+! copy running-config startup-config
+!
+! DESPUES aplicar la configuracion que sigue:
+!
+enable secret {{ global_config.gestion.enable_secrets.routers }}
+!
+aaa new-model
+!
+!
+aaa authentication login default local
+!
+!
+!
+!
+!
+aaa session-id common
+!
+username {{ global_config.gestion.usuarios.admin.username }} privilege {{ global_config.gestion.usuarios.admin.privilege }} secret {{ global_config.gestion.usuarios.admin.password }}
+!
+ip ssh version {{ global_config.gestion.ssh.version }}
+!
+! ================================================================
+! CONFIGURACION LOGGING
+! ================================================================
+logging buffered {{ global_config.gestion.syslog.levels.buffered }}
+logging console {{ global_config.gestion.syslog.levels.console }}
+logging monitor {{ global_config.gestion.syslog.levels.monitor }}
+logging facility {{ global_config.gestion.syslog.facility }}
+logging source-interface Loopback0 vrf {{ global_config.segmentacion.vrfs.gestion.nombre }}
+logging host {{ configuracion.destinos.servidor_syslog }}
+!
+! ================================================================
+! CONFIGURACION NETFLOW
+! ================================================================
+ip flow-export source Loopback0
+ip flow-export version 9
+ip flow-export destination {{ configuracion.destinos.servidor_netflow }} 2055
+!
+! ================================================================
+! ACCESS LISTS DE GESTION
+! ================================================================
+ip access-list standard SNMP-RO-ACL
+ permit {{ configuracion.destinos.servidor_snmp }}
+ deny   any log
+!
+ip access-list standard SNMP-RW-ACL
+ permit {{ configuracion.destinos.servidor_snmp }}
+ deny   any log
+!
+ip access-list extended ACL-MGMT
+ remark --- PERMITIR SSH desde servidor gestion centralizado ---
+ permit tcp host {{ configuracion.destinos.servidor_syslog }} any eq 22 log
+ deny   ip any any log
+!
+! ================================================================
+! CONFIGURACION SNMP
+! ================================================================
+snmp-server community {{ global_config.gestion.snmp.communities.readonly }} RO SNMP-RO-ACL
+snmp-server community {{ global_config.gestion.snmp.communities.readwrite }} RW SNMP-RW-ACL
+snmp-server location Sede_{{ sede.numero }}_Router_principal
+snmp-server contact {{ global_config.gestion.snmp.contact }}
+snmp-server chassis-id {{ sede.nombre | replace(" ", "_") }}_ppal
+{% for trap in global_config.gestion.snmp.traps %}
+snmp-server enable traps {{ trap }}
+{% endfor %}
+snmp-server host {{ configuracion.destinos.servidor_snmp }} version {{ global_config.gestion.snmp.version }} {{ global_config.gestion.snmp.communities.readonly }}
+!
+! ================================================================
+! CONFIGURACION NTP
+! ================================================================
+ntp authentication-key {{ global_config.gestion.ntp.authentication_key }} md5 {{ global_config.gestion.ntp.key_string }} 7
+ntp authenticate
+ntp trusted-key {{ global_config.gestion.ntp.authentication_key }}
+ntp source Loopback0
+ntp update-calendar
+ntp server vrf {{ global_config.segmentacion.vrfs.gestion.nombre }} {{ configuracion.destinos.servidor_ntp }} prefer
+!
+! ================================================================
+! BANNER Y ACCESO REMOTO
+! ================================================================
+banner motd ^C{{ global_config.networking.banner_motd }}^C
+!
+line con 0
+ stopbits 1
+line aux 0
+ stopbits 1
+line vty 0 4
+ access-class ACL-MGMT in
+ exec-timeout {{ global_config.gestion.ssh.timeout }} 0
+ transport input ssh
+!
+! ================================================================
+! AÑADIR NETFLOW A INTERFACES EXISTENTES
+! ================================================================
+! NOTA: Aplicar manualmente a interfaces ya configuradas:
+!
+interface {{ interfaces.lan }}.{{ global_config.segmentacion.vrfs.main.vlan }}
+ ip flow ingress
+!
+interface {{ interfaces.lan }}.{{ global_config.segmentacion.vrfs.invitados.vlan }}
+ ip flow ingress
+!
+interface {{ interfaces.lan }}.{{ global_config.segmentacion.vrfs.gestion.vlan }}
+ ip flow ingress
+!
+interface {{ interfaces.wan }}.{{ wan.main.vlan }}
+ ip flow ingress
+!
+interface {{ interfaces.wan }}.{{ wan.invitados.vlan }}
+ ip flow ingress
+!
+interface {{ interfaces.wan }}.{{ wan.gestion.vlan }}
+ ip flow ingress
+!
+! ================================================================
+! FIN CONFIGURACION GESTION - Aplicar con copy running-config startup-config
+! ================================================================

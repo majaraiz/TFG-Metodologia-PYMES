@@ -1,0 +1,244 @@
+# ================================================================
+# CONFIGURACION GLOBAL - METODOLOGIA AUTOMATIZACION PYMES
+# ================================================================
+# Este archivo contiene todos los parametros estandar de la metodologia
+# NO debe ser modificado por el tecnico implementador
+# Contiene perfiles reutilizables para todos los bloques funcionales
+
+# ================================================================
+# BLOQUE: SEGMENTACION 
+# ================================================================
+segmentacion:
+  # VRFs estandar para todas las sedes
+  vrfs:
+    main:
+      rd: "65000:1"
+      rt_export: "65000:1"
+      rt_import: "65000:1"
+      vlan: 2
+      nombre: "main"
+      descripcion: "Trafico corporativo principal"
+    
+    invitados:
+      rd: "65000:2" 
+      rt_export: "65000:2"
+      rt_import: "65000:2"
+      vlan: 56
+      nombre: "invitados"
+      descripcion: "Red de invitados con acceso limitado"
+    
+    gestion:
+      rd: "65000:99"
+      rt_export: "65000:99" 
+      rt_import: "65000:99"
+      vlan: 99
+      nombre: "gestion"
+      descripcion: "Red de gestion y administracion"
+
+  # VLAN nativa (sin uso por seguridad)
+  vlan_nativa:
+    id: 999
+    nombre: "nativa_sin_uso"
+    shutdown: true
+
+# ================================================================
+# BLOQUE: ENRUTAMIENTO
+# ================================================================  
+enrutamiento:
+  # Configuracion BGP global
+  bgp:
+    as_number: 65000
+    timers:
+      keepalive: 10
+      holdtime: 30
+    
+    # Metricas por tipo de router (para balanceo)
+    metricas:
+      principal: 100
+      backup: 200
+    
+    # Configuracion por VRF
+    vrfs:
+      main:
+        anunciar_default: true  # Solo en routers principales de sede central
+        redistribucion: ["connected", "static"]
+      
+      invitados:
+        anunciar_default: false
+        redistribucion: ["connected", "static"]
+      
+      gestion:
+        anunciar_default: false
+        redistribucion: ["connected", "static"]
+
+  # Configuracion HSRP/VRRP
+  hsrp:
+    # Prioridades por tipo de equipo
+    prioridades:
+      principal: 105
+      backup_central: 101  # Backup en sede central
+      backup_remoto: 98    # Backup en sede remota
+    
+    # Configuracion comun
+    preempt_delay: 60  # Para sedes remotas
+    preempt_delay_central: 30  # Para sede central
+    track_decrement: 15
+    track_delay_down: 10
+    track_delay_up: 10
+
+# ================================================================
+# BLOQUE: CIFRADO
+# ================================================================
+cifrado:
+  # Politicas ISAKMP estandar
+  isakmp:
+    policy_id: 10
+    encryption: "3des"
+    hash: "md5" 
+    authentication: "pre-share"
+    lifetime: 21600  # 6 horas
+    keepalive: 60
+    keepalive_retry: 2
+  
+  # Transform sets IPSec
+  ipsec:
+    transform_set: "transformada"
+    esp_encryption: "esp-3des"
+    esp_authentication: "esp-sha-hmac"
+    mode: "tunnel"
+    lifetime: 18000  # 5 horas
+    idle_time: 600   # 10 minutos
+  
+  # Clave pre-compartida (ejemplo - deberia cambiarse)
+  psk: "C1fr4d0"
+
+# ================================================================
+# BLOQUE: GESTION Y CONTROL
+# ================================================================
+gestion:
+  # Servidor centralizado de gestion
+  servidor_gestion:
+    ip: "172.19.204.254"
+    descripcion: "Servidor ficticio de gestion centralizada"
+  
+  # Configuracion SSH
+  ssh:
+    version: 2
+    timeout: 30
+    
+  # Usuarios y contraseñas estandar
+  usuarios:
+    admin:
+      username: "admin"
+      privilege: 15
+      password: "cisco"
+  
+  # Enable secrets por tipo de equipo  
+  enable_secrets:
+    routers: "pursinga"
+    switches: "seintde"
+  
+  # Configuracion SNMP
+  snmp:
+    communities:
+      readonly: "TFG-RO"
+      readwrite: "TFG-RW"
+    version: "2c"
+    contact: "majaraiz@alu.ucam.edu"
+    traps:
+      - "snmp authentication linkdown linkup coldstart warmstart"
+      - "bgp"
+      - "config" 
+      - "hsrp"
+      - "ike tunnel start"
+      - "ike tunnel stop"
+      - "ipsec tunnel start"
+      - "ipsec tunnel stop"
+  
+  # Configuracion Syslog
+  syslog:
+    facility: "local0"
+    levels:
+      console: "critical"
+      monitor: "warnings"
+      buffered: 32768
+  
+  # Configuracion NTP
+  ntp:
+    authentication_key: 1
+    key_string: "0225085A1D03300F787E"
+    authenticate: true
+
+# ================================================================
+# BLOQUE: SPANNING TREE (para switches)
+# ================================================================
+spanning_tree:
+  mode: "rapid-pvst"
+  
+  # Prioridades por tipo de switch
+  prioridades:
+    distribucion_principal: 4096
+    distribucion_backup: 8192
+    acceso: 24576
+  
+  # Configuraciones adicionales
+  portfast_edge_bpduguard: true
+  extend_system_id: true
+
+# ================================================================
+# CONFIGURACIONES DE RED ESTANDAR
+# ================================================================
+networking:
+  # Configuracion basica IOS
+  basics:
+    domain_name: "eveng.com"
+    ip_cef: true
+    ipv6_cef: false
+    
+  # Servicios estandar
+  services:
+    timestamps_debug: "datetime msec"
+    timestamps_log: "datetime msec"
+    password_encryption: true
+    sequence_numbers: true
+    compress_config: true  # Solo para switches
+  
+  # Banners estandar
+  banner_motd: |
+    ================================================================
+         Metodologia de Automatizacion de Redes para PYMEs
+              Trabajo Fin de Grado - MAJO
+                   ACCESO RESTRINGIDO
+    ================================================================
+
+# ================================================================
+# SEGURIDAD ESTANDAR
+# ================================================================
+seguridad:
+  # ACLs de gestion (permitir SSH solo desde gestion)
+  acl_mgmt_basica: |
+    remark --- PERMITIR SSH desde servidor gestion centralizado ---
+    permit tcp host 172.19.204.254 any eq 22 log
+    deny ip any any log
+  
+  # ACL para invitados (denegar acceso a redes internas)
+  acl_invitados_base: |
+    remark --- PERMITIR HSRP entre routers ---
+    permit udp any host 224.0.0.2 eq 1985
+    permit udp any any eq 1985
+    remark --- DENEGAR acceso a redes corporativas ---
+    deny ip {red_invitados} 192.168.0.0 0.0.255.255
+    remark --- DENEGAR acceso a redes de gestion ---
+    deny ip {red_invitados} 172.19.0.0 0.0.255.255
+    remark --- DENEGAR acceso a otras redes de invitados ---
+    deny ip {red_invitados} 172.16.0.0 0.0.255.255
+    remark --- DENEGAR acceso a redes internas del operador ---
+    deny ip {red_invitados} 10.0.0.0 0.255.255.255
+    remark --- PERMITIR solo salida a Internet ---
+    permit ip any any
+
+  # Port security para switches de acceso
+  port_security:
+    maximum: 5
+    violation: "restrict"
+    mac_address_sticky: true
