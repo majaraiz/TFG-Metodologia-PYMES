@@ -1,0 +1,464 @@
+Pruebas desde los PCs.
+	En la red corporativa main.
+		•Desde sede remota simple conectividad con sede central.
+		PC1Sede1> ping 192.168.101.11
+		84 bytes from 192.168.101.11 icmp_seq=1 ttl=62 time=285.124 ms
+		84 bytes from 192.168.101.11 icmp_seq=2 ttl=62 time=44.674 ms
+		Resultado OK. Conectividad cifrada
+
+		•	Desde sede remota simple conectividad con sede remota con respaldo.
+		PC1Sede1> ping 192.168.10.11
+		84 bytes from 192.168.10.11 icmp_seq=1 ttl=62 time=515.934 ms
+		84 bytes from 192.168.10.11 icmp_seq=2 ttl=62 time=27.636 ms
+		Resultado OK. Conectividad no cifrada.
+		
+		•Conectividad hacia direccionamientos de redes de gestion o invitados o hacia internet.
+		PC1Sede1> ping 172.16.1.11
+		*10.0.0.41 icmp_seq=1 ttl=254 time=30.873 ms (ICMP type:3, code:1, Destination host unreachable)
+		*10.0.0.41 icmp_seq=2 ttl=254 time=28.342 ms (ICMP type:3, code:1, Destination host unreachable)
+		PC1Sede1> ping 172.19.1.2
+		*10.0.0.41 icmp_seq=1 ttl=254 time=30.258 ms (ICMP type:3, code:1, Destination host unreachable)
+		*10.0.0.41 icmp_seq=2 ttl=254 time=24.651 ms (ICMP type:3, code:1, Destination host unreachable)
+		PC1Sede1> ping 8.8.8.8
+		*10.0.0.41 icmp_seq=1 ttl=254 time=21.030 ms (ICMP type:3, code:1, Destination host unreachable)
+		*10.0.0.41 icmp_seq=2 ttl=254 time=232.596 ms (ICMP type:3, code:1, Destination host unreachable)
+		Resultado OK. No encuentra el destino ya que asume que estan en la ruta por defecto publicada desde la sede central y no en la sede.
+		
+	En red de invitados.
+		•Conectividad con las demás sedes del rango de invitados o hacia main o gestion.
+		 PC1InvS1> ping 172.16.4.11
+		*172.16.1.2 icmp_seq=1 ttl=255 time=14.190 ms (ICMP type:3, code:13, Communication administratively prohibited)
+		*172.16.1.2 icmp_seq=2 ttl=255 time=12.180 ms (ICMP type:3, code:13, Communication administratively prohibited)
+		PC1InvS1> ping 192.168.1.11
+		*172.16.1.2 icmp_seq=1 ttl=255 time=930.270 ms (ICMP type:3, code:13, Communication administratively prohibited)
+		*172.16.1.2 icmp_seq=2 ttl=255 time=9.270 ms (ICMP type:3, code:13, Communication administratively prohibited)
+		Resultado OK. Rechazado por la lista de acceso.
+		
+		•Conectividad hacia internet.
+		PC1InvS1> ping 8.8.8.8
+		*10.16.0.41 icmp_seq=1 ttl=254 time=29.146 ms (ICMP type:3, code:1, Destination host unreachable)
+		*10.16.0.41 icmp_seq=2 ttl=254 time=25.234 ms (ICMP type:3, code:1, Destination host unreachable)
+		Resultado OK. No encuentra el destino, pero NO es rechazado por la lista de acceso.
+
+		Resultados generales 100% OK
+		Conclusión: La segmentación y políticas de seguridad funcionan según diseño.
+
+Pruebas para routers
+		•Desde sede remota simple conectividad con sede central y sede remota y establecimiento solo de tuneles de cifrado contra sede central
+		Sede1_ppal#ping vrf main 192.168.10.11 source fastEthernet 0/0.2
+		Type escape sequence to abort.
+		Sending 5, 100-byte ICMP Echos to 192.168.10.11, timeout is 2 seconds:
+		Packet sent with a source address of 192.168.1.2
+		!!!!!
+		Success rate is 100 percent (5/5), round-trip min/avg/max = 28/318/1440 ms
+		Sede1_ppal#ping vrf main 192.168.101.11 source fastEthernet 0/0.2
+		Type escape sequence to abort.
+		Sending 5, 100-byte ICMP Echos to 192.168.101.11, timeout is 2 seconds:
+		Packet sent with a source address of 192.168.1.2
+		!!!!!
+		Success rate is 100 percent (5/5), round-trip min/avg/max = 28/91/324 ms
+		Sede1_ppal#sh crypto isakmp sa
+		IPv4 Crypto ISAKMP SA
+		dst             src             state          conn-id status
+		172.26.28.25    172.26.28.10    QM_IDLE           1004 ACTIVE
+		IPv6 Crypto ISAKMP SA
+		Resultado OK. Se establece conectividad contra ambas sedes pero solo se genera tunel contra sede central.
+		
+		•Estado de los interfaces.
+		Sede1_ppal#sh ip interface brief
+		Interface                  IP-Address      OK? Method Status                Protocol
+		FastEthernet0/0            unassigned      YES NVRAM  up                    up
+		FastEthernet0/0.2          192.168.1.2     YES NVRAM  up                    up
+		FastEthernet0/0.56         172.16.1.2      YES NVRAM  up                    up
+		FastEthernet0/0.99         172.19.1.2      YES NVRAM  up                    up
+		FastEthernet1/0            unassigned      YES NVRAM  up                    up
+		FastEthernet1/0.100        10.0.0.11       YES NVRAM  up                    up
+		FastEthernet1/0.156        10.16.0.11      YES NVRAM  up                    up
+		FastEthernet1/0.199        10.199.0.11     YES NVRAM  up                    up
+		Loopback0                  172.19.1.20     YES NVRAM  up                    up
+		Loopback55                 172.26.28.10    YES NVRAM  up                    up
+		Resultado OK. Todos los interfaces levantados
+		
+		•Tablas de rutas en vrf main (identico para resto de vrfs)
+		Sede1_ppal#sh ip route vrf main
+
+		Routing Table: main
+		Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+			   D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+			   N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+			   E1 - OSPF external type 1, E2 - OSPF external type 2
+			   i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+			   ia - IS-IS inter area, * - candidate default, U - per-user static route
+			   o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+			   a - application route
+			   + - replicated route, % - next hop override
+
+		Gateway of last resort is 10.0.0.41 to network 0.0.0.0
+
+		B*    0.0.0.0/0 [200/100] via 10.0.0.41, 00:20:16
+			  10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+		C        10.0.0.0/24 is directly connected, FastEthernet1/0.100
+		L        10.0.0.11/32 is directly connected, FastEthernet1/0.100
+			  172.18.0.0/24 is subnetted, 1 subnets
+		B        172.18.254.0 [200/100] via 10.0.0.41, 01:21:19
+			  172.26.0.0/32 is subnetted, 5 subnets
+		C        172.26.28.10 is directly connected, Loopback55
+		B        172.26.28.25 [200/100] via 10.0.0.41, 01:21:19
+		B        172.26.28.26 [200/200] via 10.0.0.42, 01:21:19
+		B        172.26.28.30 [200/100] via 10.0.0.51, 01:21:19
+		B        172.26.28.31 [200/200] via 10.0.0.52, 01:21:19
+			  192.168.1.0/24 is variably subnetted, 2 subnets, 2 masks
+		C        192.168.1.0/24 is directly connected, FastEthernet0/0.2
+		L        192.168.1.2/32 is directly connected, FastEthernet0/0.2
+		B     192.168.10.0/24 [200/100] via 10.0.0.51, 01:21:19
+		B     192.168.101.0/24 [200/100] via 10.0.0.41, 01:21:19
+		Resultado OK. Rutas recibidas por BGP junto conla ruta por defecto, redes conectadas y loopbacks
+
+		•Anuncios publicados desde la sede hacia la red del operador en vrf main (identico para resto de vrfs)
+		Sede1_ppal#show ip bgp vpnv4 vrf main neighbors 10.0.0.254 advertised-routes
+		BGP table version is 28, local router ID is 10.0.0.11
+		Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+					  r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+					  x best-external, a additional-path, c RIB-compressed,
+		Origin codes: i - IGP, e - EGP, ? - incomplete
+		RPKI validation codes: V valid, I invalid, N Not found
+
+			 Network          Next Hop            Metric LocPrf Weight Path
+		Route Distinguisher: 65000:1 (default for vrf main)
+		 *>  172.26.28.10/32  0.0.0.0                  0         32768 ?
+		 *>  192.168.1.0      0.0.0.0                  0         32768 ?
+
+		Total number of prefixes 2
+		Resultado OK. Red de la sede y hosts correspondiente a la loopback de cifrado
+		
+		
+		•Servidor NTP hacia al que se apunta para sincronizacion de reloj
+		Sede1_ppal#show ntp associations
+
+		  address         ref clock       st   when   poll reach  delay  offset   disp
+		 ~172.19.204.254  .INIT.          16      -   1024     0  0.000   0.000 15937.
+		 * sys.peer, # selected, + candidate, - outlyer, x falseticker, ~ configured
+		 Resultado OK. Correcto pero no sincroniza al no haber respuesta.
+
+		•Telemetria del trafico con Netflow
+		Sede1_ppal#show ip cache flow
+		IP packet size distribution (3549 total packets):
+		   1-32   64   96  128  160  192  224  256  288  320  352  384  416  448  480
+		   .000 .946 .043 .006 .000 .000 .001 .000 .000 .001 .000 .000 .000 .000 .000
+
+			512  544  576 1024 1536 2048 2560 3072 3584 4096 4608
+		   .000 .000 .000 .000 .000 .000 .000 .000 .000 .000 .000
+
+		IP Flow Switching Cache, 4456704 bytes
+		  3 active, 65533 inactive, 94 added
+		  16976 ager polls, 0 flow alloc failures
+		  Active flows timeout in 30 minutes
+		  Inactive flows timeout in 15 seconds
+		IP Sub Flow Cache, 533256 bytes
+		  3 active, 16381 inactive, 94 added, 94 added to flow
+		  0 alloc failures, 0 force free
+		  1 chunk, 1 chunk added
+		  last clearing of statistics never
+		Protocol         Total    Flows   Packets Bytes  Packets Active(Sec) Idle(Sec)
+		--------         Flows     /Sec     /Flow  /Pkt     /Sec     /Flow     /Flow
+		TCP-BGP             10      0.0       229    50      0.4    1079.3       5.1
+		UDP-other           14      0.0         2   147      0.0       0.3      15.5
+		ICMP                60      0.0         3    72      0.0       3.9      15.6
+
+		SrcIf         SrcIPaddress    DstIf         DstIPaddress    Pr SrcP DstP  Pkts
+		IP-other             5      0.0         4    84      0.0       3.6      15.7
+		Total:              89      0.0        28    53      0.4     124.2      14.4
+
+		SrcIf         SrcIPaddress    DstIf         DstIPaddress    Pr SrcP DstP  Pkts
+		Fa1/0.199     10.199.0.254    Local         10.199.0.11     06 00B3 4CAA   326
+		Fa1/0.156     10.16.0.254     Local         10.16.0.11      06 00B3 6317   324
+		Fa1/0.100     10.0.0.254      Local         10.0.0.11       06 00B3 A79D   329
+		Resultado OK. Correcto se observa trafico por los interfaces
+
+		•Servicio SNMP 
+				Sede1_ppal#sh snmp
+		Chassis: Sede1_ppal
+		Contact: majaraiz@alu.ucam.edu
+		Location: Sede_1_Router_principal
+		0 SNMP packets input
+			0 Bad SNMP version errors
+			0 Unknown community name
+			0 Illegal operation for community name supplied
+			0 Encoding errors
+			0 Number of requested variables
+			0 Number of altered variables
+			0 Get-request PDUs
+			0 Get-next PDUs
+			0 Set-request PDUs
+			0 Input queue packet drops (Maximum queue size 1000)
+		48 SNMP packets output
+			0 Too big errors (Maximum packet size 1500)
+			0 No such name errors
+			0 Bad values errors
+			0 General errors
+			0 Response PDUs
+			48 Trap PDUs
+		SNMP Dispatcher:
+		   queue 0/75 (current/max), 0 dropped
+		SNMP Engine:
+		   queue 0/1000 (current/max), 0 dropped
+
+		SNMP logging: enabled
+			Logging to 172.19.204.254.162, 10/10, 0 sent, 36 dropped.
+		Resultado OK. Correcto, configurado pero no existe la colectora.
+		
+		•Servicio syslog 
+		Sede1_ppal#show logging history
+		Syslog History Table:1 maximum table entries,
+		saving level warnings or higher
+		 27 messages ignored, 0 dropped, 0 recursion drops
+		 2 table entries flushed
+		 SNMP notifications not enabled
+		   entry number 3 : BGP-3-NOTIFICATION
+			received from neighbor 10.16.0.254 active 2/8 (no supported AFI/SAFI) 3 bytes 000000
+			timestamp: 9259
+		Resultado OK. Correcto, configurado pero no existe el servidor destino.
+
+		•Autenticacion local
+		Press RETURN to get started!
+	
+		================================================================
+			 Metodologia de Automatizacion de Redes para PYMEs
+				  Trabajo Fin de Grado - MAJO
+					   ACCESO RESTRINGIDO
+		================================================================
+		User Access Verification
+		Username: admin
+		Password:
+		Sede1_ppal>en
+		Password:
+		Sede1_ppal#
+		Resultado OK. Correcto, aparece banner de advertencia, solicita usurio y contraseña.
+		
+		Resultados generales 100% OK
+		Conclusión: La segmentación, enrutamiento, cifrado, gestion/control y políticas de seguridad funcionan según diseño.
+
+Pruebas para switches
+		
+		•Estado de los interfaces.
+		Switch_sede1#sh ip interface brief
+		Interface              IP-Address      OK? Method Status                Protocol
+		Ethernet0/0            unassigned      YES unset  up                    up
+		Ethernet0/1            unassigned      YES unset  administratively down down
+		Ethernet0/2            unassigned      YES unset  administratively down down
+		Ethernet0/3            unassigned      YES unset  administratively down down
+		Ethernet1/0            unassigned      YES unset  up                    up
+		Ethernet1/1            unassigned      YES unset  up                    up
+		Ethernet1/2            unassigned      YES unset  up                    up
+		Ethernet1/3            unassigned      YES unset  up                    up
+		Vlan99                 172.19.1.4      YES NVRAM  up                    up
+		Switch_sede1#
+		Resultado OK. Interfaz de gestión operativa, puertos de usuario UP, no utilizados DOWN.
+		
+		• Configuracion de VLANs
+		Switch_sede1#sh vlan brief
+		VLAN Name                             Status    Ports
+		---- -------------------------------- --------- -------------------------------
+		1    default                          active    Et0/1, Et0/2, Et0/3
+		2    main                             active    Et1/0, Et1/1
+		56   invitados                        active    Et1/2, Et1/3
+		99   gestion                          active
+		999  nativa_sin_uso                   act/lshut
+		1002 fddi-default                     act/unsup
+		1003 token-ring-default               act/unsup
+		1004 fddinet-default                  act/unsup
+		1005 trnet-default                    act/unsup
+		Switch_sede1#
+		Resultado OK. VLANs creadas correctamente, puertos asignados según diseño.
+				
+		•Tablas MAC
+		Switch_sede1#show mac address-table
+				  Mac Address Table
+		-------------------------------------------
+
+		Vlan    Mac Address       Type        Ports
+		----    -----------       --------    -----
+		  56    0000.0c07.ac38    DYNAMIC     Et0/0
+		  56    0050.7966.6804    STATIC      Et1/2
+		  56    aabb.cc00.2002    STATIC      Et1/2
+		  56    ca01.469f.001c    STATIC      Et1/2
+		   2    0000.0c07.ac02    DYNAMIC     Et0/0
+		  99    0000.0c07.ac63    DYNAMIC     Et0/0
+		Total Mac Addresses for this criterion: 6
+		Switch_sede1#show mac address-table vlan 2
+				  Mac Address Table
+		-------------------------------------------
+
+		Vlan    Mac Address       Type        Ports
+		----    -----------       --------    -----
+		   2    0000.0c07.ac02    DYNAMIC     Et0/0
+		Total Mac Addresses for this criterion: 1
+		Resultado OK. Tabla de visualizacion de MAC correcto, separación por VLANs correctamente.
+		
+		• Configuración Spanning Tree
+		Switch_sede1#sh spanning-tree
+
+		VLAN0002
+		  Spanning tree enabled protocol rstp
+		  Root ID    Priority    24578
+					 Address     aabb.cc00.b000
+					 This bridge is the root
+					 Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+		  Bridge ID  Priority    24578  (priority 24576 sys-id-ext 2)
+					 Address     aabb.cc00.b000
+					 Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+					 Aging Time  300 sec
+
+		Interface           Role Sts Cost      Prio.Nbr Type
+		------------------- ---- --- --------- -------- --------------------------------
+		Et0/0               Desg FWD 100       128.1    P2p
+		Et1/0               Desg FWD 100       128.5    P2p Edge
+		Et1/1               Desg FWD 100       128.6    P2p Edge
+
+		VLAN0056
+		  Spanning tree enabled protocol rstp
+		  Root ID    Priority    24632
+					 Address     aabb.cc00.b000
+					 This bridge is the root
+					 Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+		  Bridge ID  Priority    24632  (priority 24576 sys-id-ext 56)
+					 Address     aabb.cc00.b000
+					 Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+					 Aging Time  300 sec
+
+		Interface           Role Sts Cost      Prio.Nbr Type
+		------------------- ---- --- --------- -------- --------------------------------
+		Et0/0               Desg FWD 100       128.1    P2p
+		Et1/2               Desg FWD 100       128.7    P2p Edge
+		Et1/3               Desg FWD 100       128.8    P2p Edge
+
+		VLAN0099
+		  Spanning tree enabled protocol rstp
+		  Root ID    Priority    24675
+					 Address     aabb.cc00.b000
+					 This bridge is the root
+					 Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+		  Bridge ID  Priority    24675  (priority 24576 sys-id-ext 99)
+					 Address     aabb.cc00.b000
+					 Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+					 Aging Time  300 sec
+
+		Interface           Role Sts Cost      Prio.Nbr Type
+		------------------- ---- --- --------- -------- --------------------------------
+		Et0/0               Desg FWD 100       128.1    P2p
+
+		Resultado OK. Spanning Tree operativo, switch es root para todas las VLANs.
+		
+		
+		• Pruebas de seguridad - Port Security
+		Switch_sede1#sh port-security interface ethernet1/2
+		Port Security              : Enabled
+		Port Status                : Secure-up
+		Violation Mode             : Shutdown
+		Aging Time                 : 0 mins
+		Aging Type                 : Absolute
+		SecureStatic Address Aging : Disabled
+		Maximum MAC Addresses      : 5
+		Total MAC Addresses        : 3
+		Configured MAC Addresses   : 0
+		Sticky MAC Addresses       : 3
+		Last Source Address:Vlan   : 0050.7966.6804:56
+		Security Violation Count   : 0
+		Resultado OK. Port Security activo, límite configurado, sticky learning funcionando.
+		
+		• Configuración de Trunk
+		Switch_sede1#sh interfaces trunk
+		Port        Mode             Encapsulation  Status        Native vlan
+		Et0/0       on               802.1q         trunking      999
+
+		Port        Vlans allowed on trunk
+		Et0/0       2,56,99
+
+		Port        Vlans allowed and active in management domain
+		Et0/0       2,56,99
+
+		Port        Vlans in spanning tree forwarding state and not pruned
+		Et0/0       2,56,99
+
+		Resultado OK. Trunk configurado correctamente, VLANs permitidas, VLAN nativa OK.
+		
+			
+		•Servidor NTP 
+		Switch_sede1#sh ntp associations
+
+		address         ref clock       st   when   poll reach  delay  offset   disp
+		~172.19.204.254  .INIT.          16      -    512     0  0.000   0.000 15937.
+		* sys.peer, # selected, + candidate, - outlyer, x falseticker, ~ configured
+		Switch_sede1#sh run | include ntp
+		ntp server 172.19.204.254
+		Resultado OK. Correcto pero no sincroniza al no haber respuesta.
+		
+		•Servicio SNMP 
+		Switch_sede1#sh snmp
+		Chassis: Switch_sede1
+		Contact: majaraiz@alu.ucam.edu
+		Location: Sede_1_Switch_Acceso
+		0 SNMP packets input
+			0 Bad SNMP version errors
+			0 Unknown community name
+			0 Illegal operation for community name supplied
+			0 Encoding errors
+			0 Number of requested variables
+			0 Number of altered variables
+			0 Get-request PDUs
+			0 Get-next PDUs
+			0 Set-request PDUs
+			0 Input queue packet drops (Maximum queue size 1000)
+		8 SNMP packets output
+			0 Too big errors (Maximum packet size 1500)
+			0 No such name errors
+			0 Bad values errors
+			0 General errors
+			0 Response PDUs
+			8 Trap PDUs
+		SNMP global trap: disabled
+
+		SNMP logging: enabled
+		Logging to 172.19.204.254.162, 0/10, 8 sent, 0 dropped.
+		
+		Resultado OK. Correcto, configurado pero no existe la colectora.
+		
+		•Servicio syslog 
+		Switch_sede1#sh logging
+		Syslog logging: enabled (0 messages dropped, 2 messages rate-limited, 0 flushes, 0 overruns, xml disabled, filtering disabled)
+
+		Exception Logging: size (4096 bytes)
+		Count and timestamp logging messages: disabled
+		Persistent logging: disabled
+		Trap logging: level informational, 37 message lines logged
+        Logging to 172.19.204.254  (udp port 514, audit disabled,
+              link up),
+              36 message lines logged,
+              0 message lines rate-limited,
+              0 message lines dropped-by-MD,
+              xml disabled, sequence number disabled
+              filtering disabled
+
+		
+		Resultado OK. Correcto, configurado pero no existe la colectora central.
+		
+		•Autenticacion local
+		================================================================
+			 Metodologia de Automatizacion de Redes para PYMEs
+				  Trabajo Fin de Grado - MAJO
+
+					ACCESO RESTRINGIDO
+		================================================================
+		User Access Verification
+		Username: admin
+		Password:
+		Switch_sede1>en
+		Password:
+		Switch_sede1#
+		Resultado OK. Correcto, aparece banner de advertencia, solicita usurio y contraseña.
+		
+		Resultados generales 100% OK
+		Conclusión: La segmentación, enrutamiento, cifrado, gestion/control y políticas de seguridad funcionan según diseño.
