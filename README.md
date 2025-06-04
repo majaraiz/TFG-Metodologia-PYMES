@@ -1,13 +1,13 @@
-# TFG-Metodologia-PYMES
-# 🏗️ Metodología de Automatización de Redes para PYMEs
+# TFG-Metodologia Building Blocks-PYMES
+# Metodología de Automatización de Redes para PYMEs
 
-## 📋 Descripción del Proyecto
+## Descripción del Proyecto
 
 Este proyecto nace del estudio de la metodología **Cisco SAFE** y las necesidades detectadas en las **pequeñas y medianas empresas (PYMEs)** para implementar redes empresariales seguras y escalables. A pesar de que Cisco SAFE proporciona un marco arquitectónico robusto, su aplicación práctica en organizaciones con recursos técnicos y económicos limitados resulta compleja debido a la ausencia de metodologías estructuradas y herramientas que faciliten su implementación.
 
 En base a ello, se ha diseñado una **metodología de building blocks modulares** que pretende **democratizar el acceso a buenas prácticas de diseño de redes empresariales**, dando respuesta así a la **brecha existente entre los principios teóricos de Cisco SAFE y su implementación práctica en entornos con recursos limitados**.
 
-## 🎯 Objetivos
+## Objetivos
 
 La metodología desarrollada busca:
 
@@ -17,9 +17,9 @@ La metodología desarrollada busca:
 - **Proporcionar herramientas modulares** que permitan implementación por fases según presupuesto
 - **Facilitar la transferencia de conocimiento** dentro de las organizaciones
 
-## 🔧 Componentes Principales
+## Componentes Principales
 
-### 📁 Estructura Modular
+### Estructura Modular-Bloques
 ```
 ├── global_config.yaml          # Estándares globales de la metodología
 ├── sedes/                      # Configuraciones específicas por tipo de sede
@@ -29,14 +29,14 @@ La metodología desarrollada busca:
 └── configuraciones/            # Salida: archivos listos para implementar
 ```
 
-### 🧱 Building Blocks Implementados
+### Building Blocks Implementados
 
 - **Segmentación**: VRFs y VLANs para aislamiento de tráfico
 - **Enrutamiento**: BGP y HSRP para conectividad y redundancia
 - **Cifrado**: Túneles IPSec para protección de comunicaciones
 - **Gestión**: SSH, SNMP, Syslog, NetFlow para administración centralizada
 
-### 🛠️ Tecnologías Utilizadas
+### Tecnologías Utilizadas
 
 - **Python**: Motor de procesamiento y automatización
 - **Jinja2**: Sistema de plantillas para configuraciones
@@ -44,7 +44,7 @@ La metodología desarrollada busca:
 - **Cisco IOS**: Plataforma de red objetivo
 - **EVE-NG**: Entorno de validación y pruebas
 
-## 🚀 Uso Rápido
+## Uso Rápido
 
 ### Instalación
 ```bash
@@ -71,15 +71,15 @@ python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dis
 python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dispositivo router_simple --bloque-gestion
 ```
 
-## 📊 Resultados Validados
+## Resultados validados en entorno de laboratorio
 
-✅ **Conectividad**: Comunicación entre sedes verificada  
-✅ **Segmentación**: Aislamiento de VRFs funcionando  
-✅ **Cifrado**: Túneles IPSec operativos  
-✅ **Gestión**: Servicios de administración configurados  
-✅ **Automatización**: Generación de configuraciones sin errores  
+**Conectividad**: Comunicación entre sedes verificada  
+**Segmentación**: Aislamiento de VRFs funcionando  
+**Cifrado**: Túneles IPSec operativos  
+**Gestión**: Servicios de administración configurados  
+**Automatización**: Generación de configuraciones sin errores  
 
-## 🎓 Contexto Académico
+## Contexto Académico
 
 Este proyecto forma parte de un **Trabajo Fin de Grado** que:
 
@@ -88,34 +88,34 @@ Este proyecto forma parte de un **Trabajo Fin de Grado** que:
 - Combina **rigor académico** con **aplicabilidad profesional**
 - Ha sido **validado experimentalmente** en laboratorio
 
-## 🔮 Roadmap
+## Fases [Estados]
 
-### ✅ Fase 1 - Sede Simple [COMPLETADO]
+### Fase 1 - Sede Simple [COMPLETADO]
 - Configuración completa funcional
 - Bloques modulares implementados
 - Validado en laboratorio EVE-NG
 
-### 🔄 Fase 2 - Sedes Redundantes [FUTURO]
+### Fase 2 - Sedes Redundantes [FUTURO]
 - Expansión para sedes con 2 routers
 - Configuraciones HSRP diferenciadas
 
-### 🔄 Fase 3 - Sede Central [FUTURO]
+### Fase 3 - Sede Central [FUTURO]
 - Routers principales + backup
 - Switches de distribución y acceso
 
-### 🔄 Fase 4 - Nuevos Bloques [FUTURO]
+### Fase 4 - Nuevos Bloques [FUTURO]
 - QoS (Quality of Service)
 - IPv6 dual-stack
 - 802.1X y NAC
 
-## 📖 Documentación
+## Documentación
 
 - **Memoria técnica completa**: Disponible en releases
 - **Guías de implementación**: En directorio `/docs`
 - **Ejemplos prácticos**: En directorio `/ejemplos`
 - **Estructura del proyecto**: Ver `ESTRUCTURA.txt`
 
-## 🤝 Contribución
+## Contribución
 
 Este proyecto académico está abierto a:
 - **Mejoras en los building blocks existentes**
@@ -124,8 +124,8 @@ Este proyecto académico está abierto a:
 - **Optimizaciones en la automatización**
 
 
-## 👨‍💻 Autor
+## Autor y Contacto
 
 **Miguel Ángel Jaraíz**  
-📧 majaraiz@alu.ucam.edu  
-🎓 Trabajo Fin de Grado - Universidad Católica de Murcia (UCAM)
+majaraiz@alu.ucam.edu  
+Trabajo Fin de Grado - Universidad Católica de Murcia (UCAM)
