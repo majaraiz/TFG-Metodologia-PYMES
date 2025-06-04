@@ -47,13 +47,6 @@ La metodología desarrollada busca:
 
 ## Uso Rápido
 
-### Instalación
-```bash
-git clone https://github.com/usuario/TFG-Metodologia-PYMES.git
-cd TFG-Metodologia-PYMES
-pip install -r requirements.txt
-```
-
 ### Generar Configuración Completa
 ```bash
 # Router de sede simple
