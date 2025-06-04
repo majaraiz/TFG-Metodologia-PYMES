@@ -3,19 +3,20 @@
 
 ## Descripción del Proyecto
 
-Este proyecto nace del estudio de la metodología **Cisco SAFE** y las necesidades detectadas en las **pequeñas y medianas empresas (PYMEs)** para implementar redes empresariales seguras y escalables. A pesar de que Cisco SAFE proporciona un marco arquitectónico robusto, su aplicación práctica en organizaciones con recursos técnicos y económicos limitados resulta compleja debido a la ausencia de metodologías estructuradas y herramientas que faciliten su implementación.
+Este proyecto nace del estudio de la metodología **Cisco SAFE** y las necesidades detectadas en las **pequeñas y medianas empresas (PYMEs)** para implementar redes empresariales seguras y escalables.
+A pesar de que Cisco SAFE proporciona un marco arquitectónico robusto  y consolidado, su aplicación práctica en organizaciones con recursos técnicos y económicos limitados resulta compleja debido a la ausencia de metodologías estructuradas y herramientas que faciliten su implementación.
 
-En base a ello, se ha diseñado una **metodología de building blocks modulares** que pretende **democratizar el acceso a buenas prácticas de diseño de redes empresariales**, dando respuesta así a la **brecha existente entre los principios teóricos de Cisco SAFE y su implementación práctica en entornos con recursos limitados**.
+En base a ello, se ha diseñado una **metodología de building blocks modulares** que pretende **facilitar el acceso a buenas prácticas de diseño de redes empresariales seguras mediante la implementación de herramientas sencillas y accesibles a entornos con recursos tecnicos y economicos limitados**.
 
 ## Objetivos
 
 La metodología desarrollada busca:
 
-- **Simplificar la implementación** de arquitecturas Cisco SAFE en PYMEs
-- **Automatizar la generación** de configuraciones de red mediante plantillas parametrizables
-- **Reducir la dependencia** de conocimiento especializado y consultoría externa
-- **Proporcionar herramientas modulares** que permitan implementación por fases según presupuesto
-- **Facilitar la transferencia de conocimiento** dentro de las organizaciones
+- **Simplificar la implementación** de arquitecturas Cisco SAFE en PYMEs.
+- **Automatizar la generación** de configuraciones de red mediante plantillas parametrizables.
+- **Reducir la dependencia** de conocimiento especializado y consultoría externa.
+- **Proporcionar herramientas modulares** que permitan implementación por fases según presupuesto.
+- **Facilitar la transferencia de conocimiento** dentro de las organizaciones.
 
 ## Componentes Principales
 
