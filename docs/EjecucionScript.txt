@@ -1,0 +1,34 @@
+# Para lanzar el script con los argumentos correspondientes acceder la carpeta del equipo donde se encuentren los ficheros
+# Ejemplo en Windows c:\TFG-Metodologia-PYMES\
+#-----------------
+# Ayuda
+python scripts/generar_config.py --help
+
+# Router completo (con bloques activos según YAML)
+python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dispositivo router_simple
+
+# Switch completo (con bloques activos según YAML)  
+python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dispositivo switch_acceso_simple
+
+# Ver en pantalla (añadir --mostrar-pantalla a cualquier comando)
+python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dispositivo router_simple --mostrar-pantalla
+
+/////Bloque de Cifrado////
+# Añadir cifrado al router de sede remota
+python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dispositivo router_simple --bloque-cifrado
+
+# Configurar sede central para cifrar con esta sede
+python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dispositivo router_simple --bloque-sede-central-cifrado
+
+/////Bloque de Gestion////
+
+# Añadir gestión completa al router
+python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dispositivo router_simple --bloque-gestion
+
+# Añadir gestión completa al switch
+python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dispositivo switch_acceso_simple --bloque-gestion
+
+# Generar Documentacion del Script
+python -m pydoc -w scripts.generar_config
+#-----------------
+# Una vez lanzadas las opciones correspondientes los ficheros generados se encontraran en la carpeta \TFG-Metodologia-PYMES\configuraciones\
