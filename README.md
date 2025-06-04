@@ -104,9 +104,10 @@ Este proyecto forma parte de un **Trabajo Fin de Grado** que:
 
 ## Documentación
 
-- **Memoria técnica completa**: Disponible en releases
-- **Guías de implementación**: En directorio `/docs`
-- **Ejemplos prácticos**: En directorio `/ejemplos`
+- **Memoria técnica completa**: Tras publicación del TFG
+- **Guías de implementación, uso y pruebas**: En directorio `/docs`
+- **Plantillas base para implementación**: En directorios `/*_base_no_tocar`
+- **Ejemplos prácticos**: En directorios `/sedes /dispositivos /plantillas`
 - **Estructura del proyecto**: Ver `ESTRUCTURA.txt`
 
 ## Contribución
