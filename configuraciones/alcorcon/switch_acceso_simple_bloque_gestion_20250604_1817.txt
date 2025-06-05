@@ -1,0 +1,105 @@
+!
+! ================================================================
+! CONFIGURACION GESTION INCREMENTAL - SWITCH alcorcon
+! ================================================================
+! Copiar y pegar estos comandos para añadir gestión completa:
+!
+! IMPORTANTE: Ejecutar PRIMERO manualmente estos comandos:
+! enable
+! configure terminal
+! crypto key generate rsa modulus 1024
+! exit
+! copy running-config startup-config
+!
+! DESPUES aplicar la configuracion que sigue:
+!
+enable secret seintde
+!
+username admin privilege 15 secret cisco
+aaa new-model
+!
+!
+aaa authentication login default local
+!
+!
+!
+!
+!
+!
+aaa session-id common
+!
+ip ssh version 2
+ip ssh server algorithm encryption aes128-ctr aes256-ctr aes128-cbc 3des-cbc aes192-cbc aes256-cbc
+ip ssh client algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+!
+! ================================================================
+! CONFIGURACION LOGGING
+! ================================================================
+logging buffered 32768
+logging console critical
+logging monitor warnings
+logging facility local0
+logging source-interface Vlan99
+logging host 172.19.204.254
+!
+! ================================================================
+! ACCESS LISTS DE GESTION
+! ================================================================
+ip access-list standard SNMP-RO-ACL
+ permit 172.19.204.254
+ permit 172.19.3.0 0.0.0.15
+ deny   any log
+!
+ip access-list extended ACL-MGMT
+ remark --- PERMITIR SSH desde routers sede ---
+ permit tcp host 172.19.3.2 172.19.3.0 0.0.0.15 eq 22
+ remark --- PERMITIR SSH desde servidor ficticio ---
+ permit tcp host 172.19.204.254 172.19.3.0 0.0.0.15 eq 22
+ deny   ip any any log
+!
+! ================================================================
+! CONFIGURACION SNMP
+! ================================================================
+snmp-server community TFG-RO RO SNMP-RO-ACL
+snmp-server trap-source Vlan99
+snmp-server location Sede_3_Switch_Acceso
+snmp-server contact majaraiz@alu.ucam.edu
+snmp-server chassis-id alcorcon_Switch
+snmp-server enable traps snmp linkdown linkup
+snmp-server host 172.19.204.254 version 2c TFG-RO
+!
+! ================================================================
+! INTERFAZ DE GESTION (si no existe)
+! ================================================================
+interface Vlan99
+ ip address 172.19.3.3 255.255.255.240
+ ip access-group ACL-MGMT in
+!
+ip default-gateway 172.19.3.1
+!
+! ================================================================
+! BANNER Y ACCESO REMOTO
+! ================================================================
+banner motd ^C================================================================
+     Metodologia de Automatizacion de Redes para PYMEs
+          Trabajo Fin de Grado - MAJO
+               ACCESO RESTRINGIDO
+================================================================
+^C
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ access-class ACL-MGMT in
+ exec-timeout 30 0
+ transport input ssh
+!
+! ================================================================
+! CONFIGURACION NTP
+! ================================================================
+ntp server 172.19.204.254
+!
+! ================================================================
+! FIN CONFIGURACION GESTION SWITCH - Aplicar con copy running-config startup-config
+! ================================================================
