@@ -1,7 +1,7 @@
 # TFG-Metodologia Building Blocks-PYMES
 # Metodología de Automatización de Redes para PYMEs
 
-## Descripción del Proyecto
+## Descripción del proyecto
 
 Este proyecto nace del estudio de la metodología **Cisco SAFE** y las necesidades detectadas en las **pequeñas y medianas empresas (PYMEs)** para implementar redes empresariales seguras y escalables.
 A pesar de que Cisco SAFE proporciona un marco arquitectónico robusto  y consolidado, su aplicación práctica en organizaciones con recursos técnicos y económicos limitados resulta compleja debido a la ausencia de metodologías estructuradas y herramientas que faciliten su implementación.
@@ -18,7 +18,7 @@ La metodología desarrollada busca:
 - **Proporcionar herramientas modulares** que permitan implementación por fases según presupuesto.
 - **Facilitar la transferencia de conocimiento** dentro de las organizaciones.
 
-## Componentes Principales
+## Componentes principales
 
 ### Estructura Modular-Bloques
 ```
@@ -30,14 +30,14 @@ La metodología desarrollada busca:
 └── configuraciones/            # Salida: archivos listos para implementar
 ```
 
-### Building Blocks Implementados
+### Building blocks implementados
 
 - **Segmentación**: VRFs y VLANs para aislamiento de tráfico
 - **Enrutamiento**: BGP y HSRP para conectividad y redundancia
 - **Cifrado**: Túneles IPSec para protección de comunicaciones
 - **Gestión**: SSH, SNMP, Syslog, NetFlow para administración centralizada
 
-### Tecnologías Utilizadas
+### Tecnologías utilizadas
 
 - **Python**: Motor de procesamiento y automatización
 - **Jinja2**: Sistema de plantillas para configuraciones
@@ -45,9 +45,9 @@ La metodología desarrollada busca:
 - **Cisco IOS**: Plataforma de red 
 - **EVE-NG**: Entorno de validación y pruebas
 
-## Uso Rápido
+## Uso rápido
 
-### Generar Configuración Completa
+### Generar configuración completa
 ```bash
 # Router de sede simple
 python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dispositivo router_simple
@@ -56,7 +56,7 @@ python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dis
 python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dispositivo switch_acceso_simple
 ```
 
-### Implementación Modular
+### Implementación de bloques 
 ```bash
 # Solo cifrado
 python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dispositivo router_simple --bloque-cifrado
@@ -73,7 +73,7 @@ python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dis
 **Gestión**: Servicios de administración configurados  
 **Automatización**: Generación de configuraciones sin errores  
 
-## Contexto Académico
+## Contexto académico
 
 Este proyecto GitHub forma parte de un **Trabajo Fin de Grado** que:
 
@@ -83,20 +83,20 @@ Este proyecto GitHub forma parte de un **Trabajo Fin de Grado** que:
 
 ## Fases [Estados]
 
-### Fase 1 - Sede Simple [COMPLETADO]
+### Fase 1 - Sede simple [COMPLETADO]
 - Configuración completa funcional
 - Bloques modulares implementados
 - Validado en laboratorio EVE-NG
 
-### Fase 2 - Sedes Redundantes [FUTURO]
+### Fase 2 - Sedes redundantes [FUTURO]
 - Expansión para sedes con 2 routers
 - Configuraciones HSRP diferenciadas
 
-### Fase 3 - Sede Central [FUTURO]
+### Fase 3 - Sede central [FUTURO]
 - Routers principales + backup
 - Switches de distribución y acceso
 
-### Fase 4 - Nuevos Bloques [FUTURO]
+### Fase 4 - Nuevos bloques [FUTURO]
 - Firewalls
 - QoS (Quality of Service)
 - 802.1X y NAC
@@ -117,7 +117,7 @@ Tras la finalización de este TFG el proyecto estará abierto a:
 - **Optimizaciones en la automatización**
 
 
-## Autor y Contacto
+## Autor y contacto
 
 **Miguel Ángel Jaraíz Orden**  
 majaraiz@alu.ucam.edu  
