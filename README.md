@@ -42,7 +42,7 @@ La metodología desarrollada busca:
 - **Python**: Motor de procesamiento y automatización
 - **Jinja2**: Sistema de plantillas para configuraciones
 - **YAML**: Formato de datos legible para parametrización
-- **Cisco IOS**: Plataforma de red objetivo
+- **Cisco IOS**: Plataforma de red 
 - **EVE-NG**: Entorno de validación y pruebas
 
 ## Uso Rápido
@@ -75,11 +75,10 @@ python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dis
 
 ## Contexto Académico
 
-Este proyecto forma parte de un **Trabajo Fin de Grado** que:
+Este proyecto GitHub forma parte de un **Trabajo Fin de Grado** que:
 
-- Aborda un **problema real** identificado en el sector empresarial
-- Proporciona una **solución práctica y utilizable** 
-- Combina **rigor académico** con **aplicabilidad profesional**
+- Aborda un **problema real** identificado en el sector empresarial de las PYME
+- Proporciona una **solución práctica y reutilizable** 
 - Ha sido **validado experimentalmente** en laboratorio
 
 ## Fases [Estados]
@@ -98,8 +97,8 @@ Este proyecto forma parte de un **Trabajo Fin de Grado** que:
 - Switches de distribución y acceso
 
 ### Fase 4 - Nuevos Bloques [FUTURO]
+- Firewalls
 - QoS (Quality of Service)
-- IPv6 dual-stack
 - 802.1X y NAC
 
 ## Documentación
@@ -108,11 +107,10 @@ Este proyecto forma parte de un **Trabajo Fin de Grado** que:
 - **Guías de implementación y uso , pruebas, esquemas, laboratorio de pruebas, etc.**: En directorio `/docs`
 - **Plantillas base para implementación**: En directorios `/*_base_no_tocar`
 - **Ejemplos prácticos**: En directorios `/sedes /dispositivos /plantillas /configuraciones`
-- **Estructura del proyecto**: Ver `ESTRUCTURA.txt`
 
 ## Contribución
 
-Este proyecto académico está abierto a:
+Tras la finalización de este TFG el proyecto estará abierto a:
 - **Mejoras en los building blocks existentes**
 - **Nuevos bloques funcionales**
 - **Soporte para otros fabricantes**
@@ -121,6 +119,7 @@ Este proyecto académico está abierto a:
 
 ## Autor y Contacto
 
-**Miguel Ángel Jaraíz**  
+**Miguel Ángel Jaraíz Orden**  
 majaraiz@alu.ucam.edu  
-Trabajo Fin de Grado - Universidad Católica de Murcia (UCAM)
+
+- Trabajo Fin de Grado - Miguel Ángel Jaraíz Orden - Universidad Católica de Murcia (UCAM)
