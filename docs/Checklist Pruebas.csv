@@ -1,41 +1,41 @@
-﻿Dispositivo;Bloque Funcional;Tipo de prueba;Descripcion Prueba;Comando Introducido;Resultado Esperado;Resultado Obtenido
-PC-Sede3-alcorcon;Segmentación;Conectividad intersedes;Ping desde red main a sede central (192.168.101.11);ping 192.168.101.11;Conectividad exitosa;OK
-PC-Sede3-alcorcon;Segmentación;Conectividad intersedes;Ping desde red main a sede respaldo (192.168.10.11);ping 192.168.10.11;Conectividad exitosa;OK
-PC-Sede3-alcorcon;Segmentación;Aislamiento VRFs;Ping desde red main a gestión (172.16.1.11);ping 172.16.1.11;Destino inalcanzable;OK
-PC-Sede3-alcorcon;Segmentación;Aislamiento VRFs;Ping desde red main a invitados (172.19.1.2);ping 172.19.1.2;Destino inalcanzable;OK
-PC-Sede3-alcorcon;Segmentación;Conectividad internet;Ping desde red main a Internet (8.8.8.8);ping 8.8.8.8;Destino inalcanzable;OK
-PC-Sede3-alcorcon;Cifrado;Conectividad cifrada;Ping desde red main a sede central con IPSec;ping 192.168.101.11;Conectividad cifrada exitosa;OK
-PC-Invitados;Segmentación;Aislamiento invitados;Ping desde invitados a otras VRFs (172.16.4.11);ping 172.16.4.11;Acceso denegado;OK
-PC-Invitados;Segmentación;Aislamiento invitados;Ping desde invitados a red main (192.168.1.11);ping 192.168.1.11;Acceso denegado;OK
-PC-Invitados;Segmentación;Conectividad internet;Ping desde invitados a Internet (8.8.8.8);ping 8.8.8.8;Destino inalcanzable;OK
-Router-Sede3-alcorcon;Configuración básica;Estado interfaces;Verificar estado de todas las interfaces;sh ip interface brief;Todos los interfaces UP;OK
-Router-Sede3-alcorcon;Enrutamiento;Tabla rutas VRF;Verificar rutas BGP en VRF main;sh ip route vrf main;Rutas de todas las sedes + default;OK
-Router-Sede3-alcorcon;Enrutamiento;Anuncios BGP;Verificar anuncios hacia operador;show ip bgp vpnv4 vrf main neighbors 10.0.0.254 advertised-routes;Solo red local (192.168.3.0/24);OK
-Router-Sede3-alcorcon;Enrutamiento;Conectividad (sin cifrado);Ping a sede central;ping vrf main 192.168.101.11 source fastEthernet 0/0.2;Conectividad plena;OK
-Router-Sede3-alcorcon;Cifrado;Estado túneles (sin bloque);Verificar túneles IPSec;sh crypto isakmp sa;Sin túneles activos;OK
-Router-Sede3-alcorcon;Enrutamiento;Conectividad (con cifrado);Ping a sede central con IPSec;ping vrf main 192.168.101.11 source fastEthernet 0/0.2;Conectividad cifrada;OK
-Router-Sede3-alcorcon;Cifrado;Estado túneles (con bloque);Verificar túneles IPSec activos;sh crypto isakmp sa;1 túnel a sede central;OK
-Router-Sede3-alcorcon;Gestion;NTP (sin bloque);Verificar sincronización NTP;show ntp associations;Sin configuración;OK
-Router-Sede3-alcorcon;Gestion;NetFlow (sin bloque);Verificar telemetría de tráfico;show ip cache flow;Sin configuración;OK
-Router-Sede3-alcorcon;Gestion;SNMP (sin bloque);Verificar agente SNMP;sh snmp;Sin configuración;OK
-Router-Sede3-alcorcon;Gestion;Syslog (sin bloque);Verificar logging centralizado;show logging history;Solo local;OK
-Router-Sede3-alcorcon;Gestion;Autenticación (sin bloque);Verificar acceso seguro;Conexión por consola;Sin autenticación;OK
-Router-Sede3-alcorcon;Gestion;NTP (con bloque);Verificar sincronización NTP;show ntp associations;Servidor configurado;OK
-Router-Sede3-alcorcon;Gestion;NetFlow (con bloque);Verificar telemetría de tráfico;show ip cache flow;Flows activos;OK
-Router-Sede3-alcorcon;Gestion;SNMP (con bloque);Verificar agente SNMP;sh snmp;Agente activo;OK
-Router-Sede3-alcorcon;Gestion;Syslog (con bloque);Verificar logging centralizado;show logging history;Servidor configurado;OK
-Router-Sede3-alcorcon;Gestion;Autenticación (con bloque);Verificar acceso seguro;Conexión por consola;Banner + AAA;OK
-Switch-Sede3-alcorcon;Configuración básica;Estado interfaces;Verificar estado de interfaces;sh ip interface brief;Usuarios UP - No usados DOWN;OK
-Switch-Sede3-alcorcon;Segmentación;Configuración VLANs;Verificar VLANs creadas;sh vlan brief;3 VLANs + nativa;OK
-Switch-Sede3-alcorcon;Segmentación;Tabla MAC;Verificar aprendizaje MAC;show mac address-table;Separación por VLAN;OK
-Switch-Sede3-alcorcon;Configuración básica;Spanning Tree;Verificar STP por VLAN;sh spanning-tree;Root para todas las VLANs;OK
-Switch-Sede3-alcorcon;Segmentación;Port Security;Verificar seguridad por puerto;sh port-security interface ethernet1/2;Límite 5 MACs + sticky;OK
-Switch-Sede3-alcorcon;Configuración básica;Configuración trunk;Verificar enlace troncal;sh interfaces trunk;3 VLANs + nativa;OK
-Switch-Sede3-alcorcon;Gestion;NTP (sin bloque);Verificar sincronización NTP;sh ntp associations;Sin configuración;OK
-Switch-Sede3-alcorcon;Gestion;SNMP (sin bloque);Verificar agente SNMP;sh snmp;Sin configuración;OK
-Switch-Sede3-alcorcon;Gestion;Syslog (sin bloque);Verificar logging;sh logging;Solo local;OK
-Switch-Sede3-alcorcon;Gestion;Autenticación (sin bloque);Verificar acceso;Conexión por consola;Sin autenticación;OK
-Switch-Sede3-alcorcon;Gestion;NTP (con bloque);Verificar sincronización NTP;sh ntp associations;Servidor configurado;OK
-Switch-Sede3-alcorcon;Gestion;SNMP (con bloque);Verificar agente SNMP;sh snmp;Agente activo;OK
-Switch-Sede3-alcorcon;Gestion;Syslog (con bloque);Verificar logging centralizado;sh logging;Servidor configurado;OK
-Switch-Sede3-alcorcon;Gestion;Autenticación (con bloque);Verificar acceso seguro;Conexión por consola;Banner + AAA;OK
+﻿Dispositivo,Bloque Funcional,Tipo de prueba,Descripcion Prueba,Comando Introducido,Resultado Esperado,Resultado Obtenido
+PC-Sede3-alcorcon,Segmentación,Conectividad intersedes,Ping desde red main a sede central (192.168.101.11),ping 192.168.101.11,Conectividad exitosa,OK
+PC-Sede3-alcorcon,Segmentación,Conectividad intersedes,Ping desde red main a sede respaldo (192.168.10.11),ping 192.168.10.11,Conectividad exitosa,OK
+PC-Sede3-alcorcon,Segmentación,Aislamiento VRFs,Ping desde red main a gestión (172.16.1.11),ping 172.16.1.11,Destino inalcanzable,OK
+PC-Sede3-alcorcon,Segmentación,Aislamiento VRFs,Ping desde red main a invitados (172.19.1.2),ping 172.19.1.2,Destino inalcanzable,OK
+PC-Sede3-alcorcon,Segmentación,Conectividad internet,Ping desde red main a Internet (8.8.8.8),ping 8.8.8.8,Destino inalcanzable,OK
+PC-Sede3-alcorcon,Cifrado,Conectividad cifrada,Ping desde red main a sede central con IPSec,ping 192.168.101.11,Conectividad cifrada exitosa,OK
+PC-Invitados,Segmentación,Aislamiento invitados,Ping desde invitados a otras VRFs (172.16.4.11),ping 172.16.4.11,Acceso denegado,OK
+PC-Invitados,Segmentación,Aislamiento invitados,Ping desde invitados a red main (192.168.1.11),ping 192.168.1.11,Acceso denegado,OK
+PC-Invitados,Segmentación,Conectividad internet,Ping desde invitados a Internet (8.8.8.8),ping 8.8.8.8,Destino inalcanzable,OK
+Router-Sede3-alcorcon,Configuración básica,Estado interfaces,Verificar estado de todas las interfaces,sh ip interface brief,Todos los interfaces UP,OK
+Router-Sede3-alcorcon,Enrutamiento,Tabla rutas VRF,Verificar rutas BGP en VRF main,sh ip route vrf main,Rutas de todas las sedes + default,OK
+Router-Sede3-alcorcon,Enrutamiento,Anuncios BGP,Verificar anuncios hacia operador,show ip bgp vpnv4 vrf main neighbors 10.0.0.254 advertised-routes,Solo red local (192.168.3.0/24),OK
+Router-Sede3-alcorcon,Enrutamiento,Conectividad (sin cifrado),Ping a sede central,ping vrf main 192.168.101.11 source fastEthernet 0/0.2,Conectividad plena,OK
+Router-Sede3-alcorcon,Cifrado,Estado túneles (sin bloque),Verificar túneles IPSec,sh crypto isakmp sa,Sin túneles activos,OK
+Router-Sede3-alcorcon,Enrutamiento,Conectividad (con cifrado),Ping a sede central con IPSec,ping vrf main 192.168.101.11 source fastEthernet 0/0.2,Conectividad cifrada,OK
+Router-Sede3-alcorcon,Cifrado,Estado túneles (con bloque),Verificar túneles IPSec activos,sh crypto isakmp sa,1 túnel a sede central,OK
+Router-Sede3-alcorcon,Gestion,NTP (sin bloque),Verificar sincronización NTP,show ntp associations,Sin configuración,OK
+Router-Sede3-alcorcon,Gestion,NetFlow (sin bloque),Verificar telemetría de tráfico,show ip cache flow,Sin configuración,OK
+Router-Sede3-alcorcon,Gestion,SNMP (sin bloque),Verificar agente SNMP,sh snmp,Sin configuración,OK
+Router-Sede3-alcorcon,Gestion,Syslog (sin bloque),Verificar logging centralizado,show logging history,Solo local,OK
+Router-Sede3-alcorcon,Gestion,Autenticación (sin bloque),Verificar acceso seguro,Conexión por consola,Sin autenticación,OK
+Router-Sede3-alcorcon,Gestion,NTP (con bloque),Verificar sincronización NTP,show ntp associations,Servidor configurado,OK
+Router-Sede3-alcorcon,Gestion,NetFlow (con bloque),Verificar telemetría de tráfico,show ip cache flow,Flows activos,OK
+Router-Sede3-alcorcon,Gestion,SNMP (con bloque),Verificar agente SNMP,sh snmp,Agente activo,OK
+Router-Sede3-alcorcon,Gestion,Syslog (con bloque),Verificar logging centralizado,show logging history,Servidor configurado,OK
+Router-Sede3-alcorcon,Gestion,Autenticación (con bloque),Verificar acceso seguro,Conexión por consola,Banner + AAA,OK
+Switch-Sede3-alcorcon,Configuración básica,Estado interfaces,Verificar estado de interfaces,sh ip interface brief,Usuarios UP - No usados DOWN,OK
+Switch-Sede3-alcorcon,Segmentación,Configuración VLANs,Verificar VLANs creadas,sh vlan brief,3 VLANs + nativa,OK
+Switch-Sede3-alcorcon,Segmentación,Tabla MAC,Verificar aprendizaje MAC,show mac address-table,Separación por VLAN,OK
+Switch-Sede3-alcorcon,Configuración básica,Spanning Tree,Verificar STP por VLAN,sh spanning-tree,Root para todas las VLANs,OK
+Switch-Sede3-alcorcon,Segmentación,Port Security,Verificar seguridad por puerto,sh port-security interface ethernet1/2,Límite 5 MACs + sticky,OK
+Switch-Sede3-alcorcon,Configuración básica,Configuración trunk,Verificar enlace troncal,sh interfaces trunk,3 VLANs + nativa,OK
+Switch-Sede3-alcorcon,Gestion,NTP (sin bloque),Verificar sincronización NTP,sh ntp associations,Sin configuración,OK
+Switch-Sede3-alcorcon,Gestion,SNMP (sin bloque),Verificar agente SNMP,sh snmp,Sin configuración,OK
+Switch-Sede3-alcorcon,Gestion,Syslog (sin bloque),Verificar logging,sh logging,Solo local,OK
+Switch-Sede3-alcorcon,Gestion,Autenticación (sin bloque),Verificar acceso,Conexión por consola,Sin autenticación,OK
+Switch-Sede3-alcorcon,Gestion,NTP (con bloque),Verificar sincronización NTP,sh ntp associations,Servidor configurado,OK
+Switch-Sede3-alcorcon,Gestion,SNMP (con bloque),Verificar agente SNMP,sh snmp,Agente activo,OK
+Switch-Sede3-alcorcon,Gestion,Syslog (con bloque),Verificar logging centralizado,sh logging,Servidor configurado,OK
+Switch-Sede3-alcorcon,Gestion,Autenticación (con bloque),Verificar acceso seguro,Conexión por consola,Banner + AAA,OK
