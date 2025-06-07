@@ -1,0 +1,36 @@
+﻿SEDE,DISPOSITIVO,TIPO,VRF,VLAN_LAN,VLAN_WAN,IP_LAN,HSRP_VIP,IP_WAN,PEER_BGP,INTERFAZ_LAN,INTERFAZ_WAN,LOOPBACK,TIPO_LOOPBACK,PRIORIDAD_HSRP,STP_PRIORITY,DESCRIPCION,COMENTARIOS
+1,Sede1_ppal,Router,main,2,100,192.168.1.2/24,192.168.1.1,10.0.0.11/24,10.0.0.254,FastEthernet0/0.2,FastEthernet1/0.100,,,105,,Sede simple - Router unico,Track interface WAN
+1,Sede1_ppal,Router,invitados,56,156,172.16.1.2/25,172.16.1.1,10.16.0.11/24,10.16.0.254,FastEthernet0/0.56,FastEthernet1/0.156,,,105,,Sede simple - Router unico,ACL restrictiva
+1,Sede1_ppal,Router,gestion,99,199,172.19.1.2/28,172.19.1.1,10.199.0.11/24,10.199.0.254,FastEthernet0/0.99,FastEthernet1/0.199,,,105,,Sede simple - Router unico,SSH/SNMP/Syslog
+1,Sede1_ppal,Loopback,gestion,,,,,,,,,172.19.1.20/32,Gestion,,,Loopback0 - Gestion,Source SNMP/Syslog
+1,Sede1_ppal,Loopback,main,,,,,,,,,172.26.28.10/32,IPSec,,,Loopback55 - IPSec,Origen tuneles
+1,Switch_sede1,Switch,gestion,99,,172.19.1.4/28,172.19.1.1,,,Ethernet0/0,,,,,24576,Switch acceso sede simple,Port-security activo
+4,SedeCentral_Rppal,Router,main,2,100,192.168.101.2/24,192.168.101.1,10.0.0.41/24,10.0.0.254,FastEthernet0/0.2,FastEthernet1/0.100,,,105,,Central - Router principal,Default-originate
+4,SedeCentral_Rbackup,Router,main,2,100,192.168.101.3/24,192.168.101.1,10.0.0.42/24,10.0.0.254,FastEthernet0/0.2,FastEthernet1/0.100,,,101,,Central - Router backup,Metric 200
+4,SedeCentral_Rppal,Router,invitados,56,156,172.16.4.2/25,172.16.4.1,10.16.0.41/24,10.16.0.254,FastEthernet0/0.56,FastEthernet1/0.156,,,105,,Central - Router principal,Network 0.0.0.0
+4,SedeCentral_Rbackup,Router,invitados,56,156,172.16.4.3/25,172.16.4.1,10.16.0.42/24,10.16.0.254,FastEthernet0/0.56,FastEthernet1/0.156,,,101,,Central - Router backup,Network 0.0.0.0
+4,SedeCentral_Rppal,Router,gestion,99,199,172.19.4.2/28,172.19.4.1,10.199.0.41/24,10.199.0.254,FastEthernet0/0.99,FastEthernet1/0.199,,,105,,Central - Router principal,SSH multi-origen
+4,SedeCentral_Rbackup,Router,gestion,99,199,172.19.4.3/28,172.19.4.1,10.199.0.42/24,10.199.0.254,FastEthernet0/0.99,FastEthernet1/0.199,,,101,,Central - Router backup,SSH multi-origen
+4,SedeCentral_Rppal,Loopback,gestion,,,,,,,,,172.19.204.1/32,Gestion,,,Loopback0 - Gestion,Source principal
+4,SedeCentral_Rbackup,Loopback,gestion,,,,,,,,,172.19.204.2/32,Gestion,,,Loopback0 - Gestion,Source backup
+4,SedeCentral_Rppal,Loopback,main,,,,,,,,,172.26.28.25/32,IPSec,,,Loopback55 - IPSec,Peer principal
+4,SedeCentral_Rbackup,Loopback,main,,,,,,,,,172.26.28.26/32,IPSec,,,Loopback55 - IPSec,Peer backup
+4,SW-Core1-Sede4,Switch,gestion,99,,172.19.4.4/28,172.19.4.1,,,Ethernet0/0,,,,,4096,Switch distribucion - Principal,Root bridge main
+4,SW-Core2-Sede4,Switch,gestion,99,,172.19.4.5/28,172.19.4.1,,,Ethernet0/0,,,,,8192,Switch distribucion - Backup,Root backup
+4,SW-Acceso1-Sede4,Switch,gestion,99,,172.19.4.6/28,172.19.4.1,,,Ethernet0/0,,,,,24576,Switch acceso central,Port-channel uplink
+4,Red_CPD,Servicio,main,,,172.18.254.0/24,,,,,,,,,,Red servicios - Solo anuncio,Ruta estatica null0
+10,Sede10_ppal,Router,main,2,100,192.168.10.2/24,192.168.10.1,10.0.0.51/24,10.0.0.254,FastEthernet0/0.2,FastEthernet1/0.100,,,105,,Redundante - Router principal,Default-originate
+10,Sede10_backup,Router,main,2,100,192.168.10.3/24,192.168.10.1,10.0.0.52/24,10.0.0.254,FastEthernet0/0.2,FastEthernet1/0.100,,,98,,Redundante - Router backup,Metric 200
+10,Sede10_ppal,Router,invitados,56,156,172.16.10.2/25,172.16.10.1,10.16.0.51/24,10.16.0.254,FastEthernet0/0.56,FastEthernet1/0.156,,,105,,Redundante - Router principal,ACL restrictiva
+10,Sede10_backup,Router,invitados,56,156,172.16.10.3/25,172.16.10.1,10.16.0.52/24,10.16.0.254,FastEthernet0/0.56,FastEthernet1/0.156,,,98,,Redundante - Router backup,ACL restrictiva
+10,Sede10_ppal,Router,gestion,99,199,172.19.10.2/28,172.19.10.1,10.199.0.51/24,10.199.0.254,FastEthernet0/0.99,FastEthernet1/0.199,,,105,,Redundante - Router principal,SSH centralizado
+10,Sede10_backup,Router,gestion,99,199,172.19.10.3/28,172.19.10.1,10.199.0.52/24,10.199.0.254,FastEthernet0/0.99,FastEthernet1/0.199,,,98,,Redundante - Router backup,SSH centralizado
+10,Sede10_ppal,Loopback,gestion,,,,,,,,,172.19.10.20/32,Gestion,,,Loopback0 - Gestion,Source principal
+10,Sede10_backup,Loopback,gestion,,,,,,,,,172.19.10.21/32,Gestion,,,Loopback0 - Gestion,Source backup
+10,Sede10_ppal,Loopback,main,,,,,,,,,172.26.28.30/32,IPSec,,,Loopback55 - IPSec,Peer principal
+10,Sede10_backup,Loopback,main,,,,,,,,,172.26.28.31/32,IPSec,,,Loopback55 - IPSec,Peer backup
+10,SW-Acceso-Sede10,Switch,gestion,99,,172.19.10.4/28,172.19.10.1,,,Ethernet0/0,,,,,24576,Switch acceso redundante,Dual uplink
+Especial,Servidor_Gestion,Servidor,gestion,,,172.19.204.254/32,,,,,,,,,,Servidor ficticio centralizado,NTP/Syslog/SNMP
+Especial,PE_Operador_Main,Operador,main,,,10.0.0.254/24,,,,,,,,,,,Router PE - VRF Main
+Especial,PE_Operador_Invitados,Operador,invitados,,,10.16.0.254/24,,,,,,,,,,,Router PE - VRF Invitados
+Especial,PE_Operador_Gestion,Operador,gestion,,,10.199.0.254/24,,,,,,,,,,,Router PE - VRF Gestion
