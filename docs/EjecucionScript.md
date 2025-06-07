@@ -1,6 +1,6 @@
 # Guia basica de ejecucion del Script #
   Para poder lanzar el script primero es necesario tener instalad Python y las librerias que permiten  manejar Jinja2 y YAML
-  Por favor sigue los pasos de la ### Guia Basica instalación python y librerias.md ###
+  Por favor sigue los pasos de la ** Guia Básica instalación python y librerias.md **
 
   Para lanzar el script con los argumentos correspondientes acceder la carpeta del equipo donde se encuentren los ficheros
   Ejemplo en Windows c:\TFG-Metodologia-PYMES\
