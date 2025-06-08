@@ -88,7 +88,7 @@ Este proyecto GitHub forma parte de un **Trabajo Fin de Grado** que:
 - Bloques modulares implementados
 - Validado en laboratorio EVE-NG
 
-### Fase 2 - Sedes redundantes [FUTURO]
+### Fase 2 - Sedes redundantes [COMPLETADO]
 - Expansión para sedes con 2 routers
 - Configuraciones HSRP diferenciadas
 
