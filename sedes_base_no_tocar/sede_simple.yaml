@@ -21,7 +21,7 @@ sede:
     enrutamiento: true              # NO CAMBIAR - siempre necesario  
     cifrado: CAMBIAR_CIFRADO        # true/false - Cifrado contra sede central
     qos: false                      # NO CAMBIAR - no implementado aun
-    gestion: true                   # NO CAMBIAR - siempre recomendado
+    gestion: true                   # CAMBIAR - siempre recomendado
 
 # ================================================================
 # DIRECCIONAMIENTO LAN (por VRF)
