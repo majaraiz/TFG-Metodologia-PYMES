@@ -212,8 +212,14 @@ class GeneradorConfiguraciones:
             else:
                 raise ValueError(f"Gestion no soportada para: {tipo_dispositivo}")
         else:
-            # Plantilla completa normal
-            return f"{tipo_dispositivo}.j2"
+            # MAPEO UNIVERSAL: Varios tipos usan el mismo template
+            if tipo_dispositivo.startswith('router'):
+                return "router_simple.j2"  # Plantilla UNIVERSAL para todos los routers
+            elif tipo_dispositivo.startswith('switch'):
+                return "switch_acceso_simple.j2"  # Plantilla UNIVERSAL para todos los switches
+            else:
+                # Plantilla completa normal
+                return f"{tipo_dispositivo}.j2"
     
     def generar_configuracion(self, tipo_dispositivo, bloque_cifrado=False, bloque_gestion=False, bloque_sede_central=False):
         """
@@ -234,10 +240,11 @@ class GeneradorConfiguraciones:
             # Preparar contexto/diccionario para la plantilla Jinja
             contexto = {
                 'global_config': self.global_config, # Proviene de global_config.yaml
-                'sede': self.sede_config['sede'], # Proviene de sede_simple.yaml
-                'direccionamiento': self.sede_config['direccionamiento'], # Proviene de sede_simple.yaml
-                'wan': self.sede_config['wan'], # Proviene de sede_simple.yaml
-                'configuracion': self.sede_config['configuracion'], # Proviene de sede_simple.yaml
+                'sede': self.sede_config['sede'], # Proviene de sede_simple.yaml o sede_redundante.yaml
+                'direccionamiento': self.sede_config['direccionamiento'], # Proviene de sede_simple.yaml o sede_redundante.yaml
+                'wan': self.sede_config['wan'], # Proviene de sede_simple.yaml o sede_redundante.yaml
+                'configuracion': self.sede_config['configuracion'], # Proviene de sede_simple.yaml o sede_redundante.yaml
+                'tipo_dispositivo': tipo_dispositivo, # Proviene del argumento --dispositivo 
                 'fecha_generacion': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
             
