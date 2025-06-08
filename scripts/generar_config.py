@@ -20,9 +20,7 @@ import ipaddress # Para validar IPs , mascaras, etc
 # ================================================================
 # FUNCIONES AUXILIARES PARA JINJA2
 # Estas funciones las usa Jinja2 dentro de las plantillas para convertir formatos de red automáticamente de CIDR a mascara de netmask, a wildcard para access-list, etc
-
 # ================================================================
-
 
 def cidr_to_netmask(cidr):
     """Convierte CIDR a netmask: /24 -> 255.255.255.0"""
