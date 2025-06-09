@@ -1,8 +1,16 @@
-# Listado de Acrónimos y Definiciones
+# Listado de Acrónimos y Definiciones (Ordenado Alfabéticamente)
+
+**3DES** - Triple Data Encryption Standard. Estándar de Cifrado de Datos Triple. Algoritmo de cifrado simétrico que aplica el algoritmo DES tres veces consecutivas para mejorar la seguridad, comúnmente utilizado en IPSec y protocolos de red.
+
+**802.1Q** - Estándar IEEE para VLAN tagging. Define el método para etiquetar tramas Ethernet con información de VLAN, permitiendo múltiples VLANs en un enlace.
+
+**802.1X** - Estándar IEEE para control de acceso a redes basado en puertos. Proporciona autenticación de dispositivos antes de permitir el acceso a la red mediante protocolos como EAP.
 
 **AAA** - Authentication, Authorization and Accounting. Autenticación, autorización y contabilidad. Framework de seguridad que controla el acceso a recursos de red mediante la verificación de identidad, permisos y registro de actividades.
 
 **ACL** - Access Control List. Lista de Control de Acceso. Conjunto de reglas que permiten o deniegan el tráfico de red basándose en criterios como direcciones IP, puertos o protocolos.
+
+**AES** - Advanced Encryption Standard. Estándar de Cifrado Avanzado. Algoritmo de cifrado simétrico moderno y seguro, sucesor de DES, ampliamente utilizado en protocolos de seguridad como IPSec, SSL/TLS y Wi-Fi.
 
 **API** - Application Programming Interface. Interfaz de Programación de Aplicaciones. Conjunto de protocolos y herramientas que permiten la comunicación entre diferentes aplicaciones de software.
 
@@ -38,6 +46,8 @@
 
 **ENS** - Esquema Nacional de Seguridad. Marco normativo español que establece la política de seguridad en la utilización de medios electrónicos.
 
+**ESP** - Encapsulating Security Payload. Carga de Seguridad Encapsulada. Protocolo de IPSec que proporciona confidencialidad, integridad, autenticación y protección anti-replay para paquetes IP mediante cifrado y autenticación.
+
 **EVE-NG** - Emulated Virtual Environment - NextGeneration. Plataforma de emulación de red que permite crear laboratorios virtuales con equipos de diferentes fabricantes.
 
 **FaaS** - Function as a Service. Funciones como Servicio. Modelo de computación en la nube que permite ejecutar código sin gestionar servidores.
@@ -66,11 +76,15 @@
 
 **JSON** - JavaScript Object Notation. Formato ligero de intercambio de datos basado en texto, fácil de leer y escribir para humanos y máquinas.
 
+**Keyring** - Anillo de Claves. Estructura de datos que almacena múltiples claves criptográficas pre-compartidas asociadas con diferentes peers o direcciones IP, utilizada en configuraciones de IPSec para gestionar claves de forma organizada.
+
 **LAN** - Local Area Network. Red de Área Local. Red de comunicaciones que conecta dispositivos en un área geográfica limitada como edificios u oficinas.
 
 **LOPDGDD** - Ley Orgánica de Protección de Datos Personales y garantía de los derechos digitales. Normativa española que regula el tratamiento de datos personales.
 
 **MAC** - Media Access Control. Control de Acceso al Medio. Identificador único asignado a interfaces de red para identificar dispositivos en la capa de enlace.
+
+**MD5** - Message Digest Algorithm 5. Algoritmo de Resumen de Mensaje 5. Función hash criptográfica que produce un hash de 128 bits, utilizada para verificación de integridad aunque considerada obsoleta para aplicaciones de seguridad críticas.
 
 **MPLS** - Multiprotocol Label Switching. Tecnología de conmutación de etiquetas que permite crear redes privadas virtuales y mejorar el rendimiento del enrutamiento.
 
@@ -98,7 +112,11 @@
 
 **PE** - Provider Edge. Router del proveedor de servicios en el borde de la red MPLS que se conecta directamente con los equipos del cliente.
 
+**Peer-groups** - Grupos de Pares. Característica de BGP que permite agrupar múltiples vecinos BGP que comparten la misma configuración de políticas, simplificando la administración y mejorando la eficiencia en redes con muchos peers.
+
 **PIN** - Places in Networks. Lugares en la Red. Concepto de Cisco SAFE que define dominios de red como Campus, Branch, WAN, etc.
+
+**Prefix-list** - Lista de Prefijos. Herramienta de filtrado en routers que permite especificar rangos de redes IP mediante prefijos CIDR, utilizada para controlar qué rutas se anuncian o reciben en protocolos de enrutamiento como BGP y OSPF.
 
 **PYME** - Pequeña y Mediana Empresa. Categoría empresarial que incluye empresas con limitaciones en recursos humanos, técnicos y económicos.
 
@@ -107,6 +125,8 @@
 **QoS** - Quality of Service. Calidad de Servicio. Conjunto de tecnologías que garantizan niveles específicos de rendimiento para aplicaciones, usuarios o flujos de datos.
 
 **RADIUS** - Remote Authentication Dial-In User Service. Protocolo de red que proporciona gestión centralizada de autenticación, autorización y contabilidad para usuarios de red.
+
+**Route-maps** - Mapas de Rutas. Herramientas de política de enrutamiento que permiten definir condiciones complejas para filtrar, modificar atributos o redistribuir rutas entre protocolos de enrutamiento, proporcionando control granular sobre el comportamiento del routing.
 
 **Router** - Enrutador. Dispositivo de red de capa 3 que reenvía paquetes de datos entre diferentes redes basándose en direcciones IP. Toma decisiones de enrutamiento utilizando tablas de routing para determinar la mejor ruta hacia el destino.
 
@@ -119,6 +139,8 @@
 **SCF** - Security Control Framework. Marco de Control de Seguridad de Cisco que define acciones para mejorar la visibilidad y control en redes.
 
 **SD-WAN** - Software-Defined Wide Area Network. Red de Área Amplia Definida por Software. Tecnología que simplifica la gestión y operación de redes WAN mediante control centralizado por software.
+
+**SHA-HMAC** - Secure Hash Algorithm - Hash-based Message Authentication Code. Código de Autenticación de Mensaje basado en Hash Seguro. Algoritmo que combina funciones hash SHA con HMAC para proporcionar autenticación e integridad en protocolos como IPSec.
 
 **SNMP** - Simple Network Management Protocol. Protocolo Simple de Gestión de Red. Protocolo estándar para gestionar y monitorizar dispositivos de red como routers, switches y servidores.
 
@@ -154,8 +176,4 @@
 
 **xWDM** - x Wavelength Division Multiplexing. Multiplexación por División de Longitud de Onda. Tecnología que permite transmitir múltiples señales ópticas en una sola fibra.
 
-**YAML** - YAML Ain't Markup Language. Estándar de serialización de datos legible por humanos, comúnmente utilizado para archivos de configuración y intercambio de datos.
-
-**802.1Q** - Estándar IEEE para VLAN tagging. Define el método para etiquetar tramas Ethernet con información de VLAN, permitiendo múltiples VLANs en un enlace.
-
-**802.1X** - Estándar IEEE para control de acceso a redes basado en puertos. Proporciona autenticación de dispositivos antes de permitir el acceso a la red mediante protocolos como EAP.
+**YAML** - YAML Ain't Markup Language. Estándar de serialización de datos legible por humanos, comúnmente utilizado para archivos de configuración e intercambio de datos.
