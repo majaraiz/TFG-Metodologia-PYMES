@@ -1,0 +1,186 @@
+# ================================================================
+# CONFIGURACION SEDE REDUNDANTE - PLANTILLA GENERICA
+# ================================================================
+# Este archivo debe ser rellenado por el tecnico implementador
+# Contiene todos los parametros especificos de esta sede con REDUNDANCIA
+# INSTRUCCIONES: Rellenar todos los valores marcados con "CAMBIAR_XXX"
+
+# ================================================================
+# INFORMACION GENERAL DE LA SEDE
+# ================================================================
+sede:
+  # Identificacion de la sede
+  nombre: "CAMBIAR_NOMBRE_SEDE"      # Ej: "Sede_Madrid", "Oficina_Murcia"
+  numero: CAMBIAR_NUMERO             # Ej: 1, 2, 3... (debe ser unico)
+  ubicacion: "CAMBIAR_UBICACION"     # Ej: "Madrid - Espana", "Murcia"
+  tipo: "redundante"                 # NO CAMBIAR - siempre "redundante"
+  
+  # Bloques funcionales a implementar en esta sede
+  bloques_activos:
+    segmentacion: true              # NO CAMBIAR - siempre necesario
+    enrutamiento: true              # NO CAMBIAR - siempre necesario  
+    cifrado: CAMBIAR_CIFRADO        # true/false - Cifrado contra sede central
+    qos: false                      # NO CAMBIAR - no implementado aun
+    gestion: true                   # CAMBIAR - siempre recomendado
+
+# ================================================================
+# DIRECCIONAMIENTO LAN (por VRF) - INCLUYE ROUTER BACKUP
+# ================================================================
+direccionamiento:
+  # VRF MAIN - Red corporativa principal
+  main:
+    red_lan: "CAMBIAR_RED_MAIN"         # Ej: "192.168.10.0/24" (red compartida)
+    ip_router: "CAMBIAR_IP_ROUTER"      # Ej: "192.168.10.2" (IP router PRINCIPAL)
+    ip_router_backup: "CAMBIAR_IP_BACKUP" # Ej: "192.168.10.3" (IP router BACKUP)<<Nuevo campo anadido
+    ip_gateway: "CAMBIAR_IP_GW"         # Ej: "192.168.10.1" (gateway HSRP compartido)
+    vlan: 2                             # NO CAMBIAR - estandar metodologia
+    
+  # VRF INVITADOS - Red de invitados  
+  invitados:
+    red_lan: "CAMBIAR_RED_INV"          # Ej: "172.16.10.0/25" (red /25 = 128 IPs)
+    ip_router: "CAMBIAR_IP_ROUTER"      # Ej: "172.16.10.2" (IP router PRINCIPAL)
+    ip_router_backup: "CAMBIAR_IP_BACKUP" # Ej: "172.16.10.3" (IP router BACKUP)<<Nuevo campo anadido
+    ip_gateway: "CAMBIAR_IP_GW"         # Ej: "172.16.10.1" (gateway HSRP compartido)
+    vlan: 56                            # NO CAMBIAR - estandar metodologia
+    
+  # VRF GESTION - Red de administracion
+  gestion:
+    red_lan: "CAMBIAR_RED_GESTION"      # Ej: "172.19.10.0/28" (red /28 = 16 IPs)
+    ip_router: "CAMBIAR_IP_ROUTER"      # Ej: "172.19.10.2" (IP router PRINCIPAL)
+    ip_router_backup: "CAMBIAR_IP_BACKUP" # Ej: "172.19.10.3" (IP router BACKUP)<<Nuevo campo anadido
+    ip_gateway: "CAMBIAR_IP_GW"         # Ej: "172.19.10.1" (gateway HSRP compartido)
+    ip_loopback: "CAMBIAR_LOOPBACK"     # Ej: "172.19.10.20" (loopback PRINCIPAL)
+    ip_loopback_backup: "CAMBIAR_LOOP_BACKUP" # Ej: "172.19.10.21" (loopback BACKUP)<<Nuevo campo anadido
+    vlan: 99                            # NO CAMBIAR - estandar metodologia
+
+# ================================================================
+# CONECTIVIDAD WAN (hacia operador MPLS) - INCLUYE ROUTER BACKUP
+# ================================================================
+wan:
+  # Interfaz fisica WAN del router
+  interfaz_fisica: "FastEthernet1/0"  # CAMBIAR si es diferente (misma para ambos)
+  
+  # Subinterfaces por VRF (coordinar con operador MPLS)
+  main:
+    vlan: 100                               # CAMBIAR si operador usa otra VLAN
+    ip_router: "CAMBIAR_IP_WAN_MAIN"        # Ej: "10.0.0.51" (IP WAN router PRINCIPAL)
+    ip_router_backup: "CAMBIAR_IP_WAN_BACKUP" # Ej: "10.0.0.52" (IP WAN router BACKUP)<<Anadido
+    mascara: "255.255.255.0"                # CAMBIAR si operador usa otra mascara
+    peer_bgp: "CAMBIAR_PEER_BGP"            # Ej: "10.0.0.254" (router operador compartido)
+    
+  invitados:
+    vlan: 156                               # CAMBIAR si operador usa otra VLAN
+    ip_router: "CAMBIAR_IP_WAN_INV"         # Ej: "10.16.0.51" (IP WAN router PRINCIPAL)
+    ip_router_backup: "CAMBIAR_IP_WAN_BACKUP" # Ej: "10.16.0.52" (IP WAN router BACKUP)<<Anadido
+    mascara: "255.255.255.0"                # CAMBIAR si operador usa otra mascara
+    peer_bgp: "CAMBIAR_PEER_BGP"            # Ej: "10.16.0.254" (router operador compartido)
+    
+  gestion:
+    vlan: 199                               # CAMBIAR si operador usa otra VLAN
+    ip_router: "CAMBIAR_IP_WAN_GEST"        # Ej: "10.199.0.51" (IP WAN router PRINCIPAL)
+    ip_router_backup: "CAMBIAR_IP_WAN_BACKUP" # Ej: "10.199.0.52" (IP WAN router BACKUP)<<Anadido
+    mascara: "255.255.255.0"                # CAMBIAR si operador usa otra mascara
+    peer_bgp: "CAMBIAR_PEER_BGP"            # Ej: "10.199.0.254" (router operador compartido)
+
+# ================================================================
+# CONFIGURACION CIFRADO (solo si bloques_activos.cifrado = true)
+# ================================================================
+cifrado:
+  # Loopback para IPSec (origen tuneles) - ROUTER PRINCIPAL
+  loopback_ipsec:
+    interfaz: "Loopback55"              # NO CAMBIAR - estandar metodologia
+    ip: "CAMBIAR_IP_IPSEC"              # Ej: "172.26.28.30" (IP unica IPSec PRINCIPAL)
+    descripcion: "Origen IPSec VRF main" # NO CAMBIAR
+
+  # Loopback para IPSec (origen tuneles) - ROUTER BACKUP<<Nuevo campo anadido
+  loopback_ipsec_backup:
+    interfaz: "Loopback55"              # NO CAMBIAR - estandar metodologia  
+    ip: "CAMBIAR_IP_IPSEC_BACKUP"       # Ej: "172.26.28.31" (IP unica IPSec BACKUP)
+    descripcion: "Origen IPSec VRF main" # NO CAMBIAR
+    
+  # Destinos IPSec (sedes con las que cifrar)
+  destinos:
+    sede_central:
+      nombre: "Sede_Central"            # NO CAMBIAR
+      peers:                            # IPs loopback IPSec de sede central
+        - "CAMBIAR_PEER_CENTRAL_1"      # Ej: "172.26.28.25" (router principal)
+        - "CAMBIAR_PEER_CENTRAL_2"      # Ej: "172.26.28.26" (router backup)
+      redes_locales:                    # Redes locales a cifrar (formato ACL)
+        - "CAMBIAR_RED_LOCAL_MAIN"      # Ej: "192.168.10.0 0.0.0.255" (VRF main local)
+      redes_remotas:                    # Redes remotas a cifrar (formato ACL)
+        - "CAMBIAR_RED_CENTRAL_MAIN"    # Ej: "192.168.101.0 0.0.0.255" (VRF main sede central)
+      crypto_map_id: 2000               # NO CAMBIAR - estandar metodologia
+
+# ================================================================
+# CONFIGURACIONES ESPECIFICAS DE SEDE
+# ================================================================
+configuracion:
+  # Configuracion HSRP para sede redundante
+  hsrp:
+    tipo_router: "redundante"           # NO CAMBIAR - detecta automaticamente principal/backup<<Nuevo campo anadido
+    preempt_delay: 60                   # NO CAMBIAR - estandar para sedes remotas
+    
+  # Configuracion BGP especifica
+  bgp:
+    router_id_source: "wan_main"        # NO CAMBIAR - usa IP WAN main como router-id
+    anunciar_default: false             # NO CAMBIAR - solo sede central anuncia
+    metric_local: 100                   # NO CAMBIAR - se ignora en redundante (usa metricas globales)
+    
+  # Configuracion de interfaces LAN
+  interfaz_lan:
+    fisica: "FastEthernet0/0"           # CAMBIAR si router tiene otra interfaz LAN
+    tipo: "subinterfaces"               # NO CAMBIAR - siempre subinterfaces
+    
+  # Servidores y destinos (normalmente en sede central)
+  destinos:
+    servidor_netflow: "172.19.204.254"    # CAMBIAR si servidor en otra IP
+    servidor_syslog: "172.19.204.254"     # CAMBIAR si servidor en otra IP  
+    servidor_ntp: "172.19.204.254"        # CAMBIAR si servidor en otra IP
+    servidor_snmp: "172.19.204.254"       # CAMBIAR si servidor en otra IP
+
+# ================================================================
+# GUIA RAPIDA PARA EL TECNICO
+# ================================================================
+# PASOS PARA COMPLETAR ESTE ARCHIVO (SEDE REDUNDANTE):
+#
+# 1. INFORMACION BASICA:
+#    - Cambiar nombre y ubicacion de la sede
+#    - Asignar numero unico de sede
+#    - Decidir si activar cifrado y gestion (true/false)
+#
+# 2. DIRECCIONAMIENTO LAN (IMPORTANTE - 2 ROUTERS):
+#    - Asignar redes IP que NO se solapen con otras sedes
+#    - Usar redes privadas (192.168.x.x, 172.16-31.x.x, 10.x.x.x)
+#    - Respetar mascara /24 para main, /25 para invitados, /28 para gestion
+#    - PATRON RECOMENDADO: Principal .2, Backup .3, Gateway .1
+#      * ip_router: .2 (ej: 192.168.10.2)
+#      * ip_router_backup: .3 (ej: 192.168.10.3)  
+#      * ip_gateway: .1 (ej: 192.168.10.1)
+#
+# 3. CONECTIVIDAD WAN (COORDINAR 2 IPs):
+#    - Coordinar con operador MPLS las IPs y VLANs PARA AMBOS ROUTERS
+#    - Verificar IPs de peers BGP con operador (mismo para ambos)
+#
+# 4. CIFRADO (si esta activo - 2 LOOPBACKS):
+#    - Asignar 2 IPs unicas para loopback IPSec (principal y backup)
+#    - Obtener IPs IPSec de sede central
+#    - Coordinar configuracion con sede central
+#    - PATRON RECOMENDADO: Principal .30, Backup .31
+#      * ip: .30 (ej: 172.26.28.30)
+#      * ip_backup: .31 (ej: 172.26.28.31)
+#
+# 5. SWITCH ACCESO:
+#    - El switch necesitara 2 interfaces trunk (una hacia cada router)
+#    - Configurar spanning-tree adecuadamente
+#
+# IMPORTANTE: 
+# - Todas las IPs deben ser unicas en toda la red
+# - Coordinar numeracion con otras sedes
+# - Ambos routers comparten el mismo gateway HSRP
+# - Ambos routers apuntan al mismo peer BGP del operador
+# - Si se activa cifrado, sede central debe configurar ambos peers
+# - El switch tendra conectividad hacia ambos routers
+#
+# - HSRP Prioridades: Principal 105, Backup 98 (desde global_config.yaml)
+# - BGP Metricas: Principal 100, Backup 200 (desde global_config.yaml)
+# ================================================================

@@ -1,18 +1,51 @@
+{# ================================================================ #}
+{# PLANTILLA JINJA2 V2 - BLOQUE CIFRADO SEDE CENTRAL UNIVERSAL       #}
+{# ================================================================ #}
+{# Genera configuracion para AGREGAR una sede al cifrado central   #}
+{# - sede_simple.yaml o sede_redundante.yaml (parametros sede)     #}
+{# SOPORTA: sede_simple (1 router) y sede_redundante (2 routers)   #}
+{# ================================================================ #}
+
+{# ================================================================ #}
+{# LOGICA DE DETECCION DE TIPO DE SEDE                             #}
+{# ================================================================ #}
+{% set es_redundante = sede.tipo == 'redundante' %}
+
 !
 ! ================================================================
 ! CONFIGURACION SEDE CENTRAL - Agregar cifrado para: {{ sede.nombre }}
 ! ================================================================
+{% if es_redundante %}
+! Sede REDUNDANTE: {{ sede.nombre }} tiene 2 routers (principal + backup)
+{% else %}
+! Sede SIMPLE: {{ sede.nombre }} tiene 1 router
+{% endif %}
 ! Aplicar en AMBOS routers de sede central (principal + backup)
 !
 crypto keyring CLAVE1 vrf main
+{% if es_redundante %}
   pre-shared-key address {{ cifrado.loopback_ipsec.ip }} key {{ global_config.cifrado.psk }}
+  pre-shared-key address {{ cifrado.loopback_ipsec_backup.ip }} key {{ global_config.cifrado.psk }}
+{% else %}
+  pre-shared-key address {{ cifrado.loopback_ipsec.ip }} key {{ global_config.cifrado.psk }}
+{% endif %}
 !
 crypto isakmp profile PERFIL1
+{% if es_redundante %}
    match identity address {{ cifrado.loopback_ipsec.ip }} 255.255.255.255 main
+   match identity address {{ cifrado.loopback_ipsec_backup.ip }} 255.255.255.255 main
+{% else %}
+   match identity address {{ cifrado.loopback_ipsec.ip }} 255.255.255.255 main
+{% endif %}
 !
 crypto map mapacifrado {{ 2000 + sede.numero }} ipsec-isakmp
  description Tunel IPSec VRF main contra {{ sede.nombre }}
+{% if es_redundante %}
  set peer {{ cifrado.loopback_ipsec.ip }}
+ set peer {{ cifrado.loopback_ipsec_backup.ip }}
+{% else %}
+ set peer {{ cifrado.loopback_ipsec.ip }}
+{% endif %}
  set security-association idle-time 600
  set transform-set transformada
  set isakmp-profile PERFIL1
@@ -20,6 +53,17 @@ crypto map mapacifrado {{ 2000 + sede.numero }} ipsec-isakmp
 !
 access-list {{ 2000 + sede.numero }} remark === TUNEL IPSEC VRF main: Sede Central hacia {{ sede.nombre }} ===
 access-list {{ 2000 + sede.numero }} permit ip 192.168.101.0 0.0.0.255 {{ direccionamiento.main.red_lan | cidr_to_acl }}
+!
+{% if es_redundante %}
+! ================================================================
+! NOTAS PARA SEDE REDUNDANTE:
+! ================================================================
+! - {{ sede.nombre }} tiene 2 routers: {{ cifrado.loopback_ipsec.ip }} (principal) + {{ cifrado.loopback_ipsec_backup.ip }} (backup)
+! - Ambos routers remotos pueden iniciar tuneles IPSec
+! - El failover es automatico via HSRP en la sede remota
+! - Esta configuracion se aplica en AMBOS routers de sede central
+! ================================================================
+{% endif %}
 !
 ! ================================================================
 ! FIN - Aplicar con copy running-config startup-config

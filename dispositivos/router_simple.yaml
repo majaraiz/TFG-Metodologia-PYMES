@@ -5,7 +5,7 @@
 # - router_simple (sede simple)
 # - router_redundante_principal (sede con respaldo)  
 # - router_redundante_backup (sede con respaldo)
-# La diferencia se maneja automaticamenteticamente por el tipo de dispositivo
+# La diferencia se maneja automaticamente por el tipo de dispositivo
 
 # ================================================================
 # IDENTIFICACION DEL DISPOSITIVO
@@ -13,7 +13,7 @@
 router:
   # Datos basicos del dispositivo
   hostname: "auto"                      # Se construye automaticamente
-  ubicacion: "adsfsdfsa"        # Ej: "Rack A", "Armario Principal" (opcional)
+  ubicacion: "Armario"        # Ej: "Rack A", "Armario Principal" (opcional)
 
 # ================================================================
 # INTERFACES FISICAS 
@@ -43,7 +43,7 @@ referencias:
 #
 # NOTA: 
 # - hostname, IPs, VRFs, BGP se heredan automaticamente del YAML de sede
-# - Las prioridades HSRP y metricas BGP se asignan autom. segun el tipo:
+# - Las prioridades HSRP y metricas BGP se asignan automaticamente segun el tipo:
 #   * router_simple: usa configuracion.hsrp.tipo_router y configuracion.bgp.metric_local
 #   * router_redundante_principal: usa prioridades.principal y metricas.principal  
 #   * router_redundante_backup: usa prioridades.backup_remoto y metricas.backup

@@ -13,7 +13,7 @@
 switch:
   # Datos basicos del dispositivo
   hostname: "auto"                      # Se construye automaticamente como: Switch_{sede.nombre}
-  ubicacion: "Sala"        # Ej: "Planta 1", "Sala Tecnica" (opcional)
+  ubicacion: "sdfsad"        # Ej: "Planta 1", "Sala Tecnica" (opcional)
 
 # ================================================================
 # INTERFACES FISICAS
@@ -22,11 +22,11 @@ interfaces:
   # Conexiones trunk hacia routers
   trunk:
     # SEDE SIMPLE: Solo completar hacia_router
-    hacia_router: "Ethernet0/0"   # Ej: "Ethernet0/0" (para sede simple)
+    hacia_router: "CAMBIAR_IF_ROUTER"   # Ej: "Ethernet0/0" (para sede simple)
     
     # SEDE REDUNDANTE: Completar AMBAS interfaces
-    hacia_router_principal: "CAMBIAR_IF_PRINCIPAL" # Ej: "Ethernet0/0" (para sede con redundancia)
-    hacia_router_backup: "CAMBIAR_IF_BACKUP"       # Ej: "Ethernet0/1" (para sede con redundancia)
+    hacia_router_principal: "Ethernet0/0" # Ej: "Ethernet0/0" (para sede con redundancia)
+    hacia_router_backup: "Ethernet1/0"       # Ej: "Ethernet0/1" (para sede con redundancia)
   
   # Puertos de acceso para usuarios (rango)
   acceso:

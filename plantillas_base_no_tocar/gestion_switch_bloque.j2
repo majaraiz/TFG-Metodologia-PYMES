@@ -1,8 +1,27 @@
+{# ================================================================ #}
+{# PLANTILLA JINJA2 V2 - BLOQUE GESTION SWITCH UNIVERSAL             #}
+{# ================================================================ #}
+{# Genera configuracion de gestion incremental basandose en:       #}
+{# - global_config.yaml (estandares metodologia)                   #}
+{# - sede_simple.yaml o sede_redundante.yaml (parametros sede)     #}
+{# SOPORTA: sede_simple (1 router) y sede_redundante (2 routers)   #}
+{# ================================================================ #}
+
+{# ================================================================ #}
+{# LOGICA DE DETECCION DE TIPO DE SEDE                             #}
+{# ================================================================ #}
+{% set es_redundante = sede.tipo == 'redundante' %}
+
 !
 ! ================================================================
 ! CONFIGURACION GESTION INCREMENTAL - SWITCH {{ sede.nombre }}
 ! ================================================================
-! Copiar y pegar estos comandos para añadir gestión completa:
+{% if es_redundante %}
+! Sede REDUNDANTE: Switch conectado a 2 routers
+{% else %}
+! Sede SIMPLE: Switch conectado a 1 router
+{% endif %}
+! Copiar y pegar estos comandos para anadir gestion completa:
 !
 ! IMPORTANTE: Ejecutar PRIMERO manualmente estos comandos:
 ! enable
@@ -51,8 +70,14 @@ ip access-list standard SNMP-RO-ACL
  deny   any log
 !
 ip access-list extended ACL-MGMT
- remark --- PERMITIR SSH desde routers sede ---
+{% if es_redundante %}
+ remark --- PERMITIR SSH desde routers sede (REDUNDANTE) ---
  permit tcp host {{ direccionamiento.gestion.ip_router }} {{ direccionamiento.gestion.red_lan | cidr_to_acl }} eq 22
+ permit tcp host {{ direccionamiento.gestion.ip_router_backup }} {{ direccionamiento.gestion.red_lan | cidr_to_acl }} eq 22
+{% else %}
+ remark --- PERMITIR SSH desde routers sede (SIMPLE) ---
+ permit tcp host {{ direccionamiento.gestion.ip_router }} {{ direccionamiento.gestion.red_lan | cidr_to_acl }} eq 22
+{% endif %}
  remark --- PERMITIR SSH desde servidor ficticio ---
  permit tcp host {{ configuracion.destinos.servidor_syslog }} {{ direccionamiento.gestion.red_lan | cidr_to_acl }} eq 22
  deny   ip any any log
@@ -72,7 +97,12 @@ snmp-server host {{ configuracion.destinos.servidor_snmp }} version {{ global_co
 ! INTERFAZ DE GESTION (si no existe)
 ! ================================================================
 interface Vlan{{ global_config.segmentacion.vrfs.gestion.vlan }}
+ {% if es_redundante %}
+ ip address {{ direccionamiento.gestion.ip_router_backup | next_ip }} {{ direccionamiento.gestion.red_lan | get_netmask_from_cidr_network }}
+{% else %}
  ip address {{ direccionamiento.gestion.ip_router | next_ip }} {{ direccionamiento.gestion.red_lan | get_netmask_from_cidr_network }}
+{% endif %}
+ 
  ip access-group ACL-MGMT in
 !
 ip default-gateway {{ direccionamiento.gestion.ip_gateway }}
@@ -94,6 +124,17 @@ line vty 0 4
 ! CONFIGURACION NTP
 ! ================================================================
 ntp server {{ configuracion.destinos.servidor_ntp }}
+!
+{% if es_redundante %}
+! ================================================================
+! NOTAS PARA SEDE REDUNDANTE:
+! ================================================================
+! - Switch permite SSH desde AMBOS routers: {{ direccionamiento.gestion.ip_router }} y {{ direccionamiento.gestion.ip_router_backup }}
+! - Redundancia total: fallo de 1 router no afecta gestion del switch
+! - Switch reporta metricas independientes al servidor SNMP/Syslog
+! - Gateway HSRP: {{ direccionamiento.gestion.ip_gateway }} (compartido por ambos routers)
+! ================================================================
+{% endif %}
 !
 ! ================================================================
 ! FIN CONFIGURACION GESTION SWITCH - Aplicar con copy running-config startup-config

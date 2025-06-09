@@ -5,7 +5,7 @@
 # - router_simple (sede simple)
 # - router_redundante_principal (sede con respaldo)  
 # - router_redundante_backup (sede con respaldo)
-# La diferencia se maneja automaticamente por el tipo de dispositivo
+# La diferencia se maneja automaticamenteticamente por el tipo de dispositivo
 
 # ================================================================
 # IDENTIFICACION DEL DISPOSITIVO
@@ -13,17 +13,17 @@
 router:
   # Datos basicos del dispositivo
   hostname: "auto"                      # Se construye automaticamente
-  ubicacion: "CAMBIAR_UBICACION"        # Ej: "Rack A", "Armario Principal" (opcional)
+  ubicacion: "adsfsdfsa"        # Ej: "Rack A", "Armario Principal" (opcional)
 
 # ================================================================
 # INTERFACES FISICAS 
 # ================================================================
 interfaces:
   # Interfaz LAN hacia switches
-  lan: "CAMBIAR_IF_LAN"                 # Ej: "FastEthernet0/0", "GigabitEthernet0/0"
+  lan: "FastEthernet0/0"                 # Ej: "FastEthernet0/0", "GigabitEthernet0/0"
   
   # Interfaz WAN hacia operador  
-  wan: "CAMBIAR_IF_WAN"                 # Ej: "FastEthernet1/0", "Ethernet1/0"
+  wan: "FastEthernet1/0"                 # Ej: "FastEthernet1/0", "Ethernet1/0"
 
 # ================================================================
 # REFERENCIAS A OTROS ARCHIVOS (NO CAMBIAR)
@@ -43,7 +43,7 @@ referencias:
 #
 # NOTA: 
 # - hostname, IPs, VRFs, BGP se heredan automaticamente del YAML de sede
-# - Las prioridades HSRP y metricas BGP se asignan automaticamente segun el tipo:
+# - Las prioridades HSRP y metricas BGP se asignan autom. segun el tipo:
 #   * router_simple: usa configuracion.hsrp.tipo_router y configuracion.bgp.metric_local
 #   * router_redundante_principal: usa prioridades.principal y metricas.principal  
 #   * router_redundante_backup: usa prioridades.backup_remoto y metricas.backup

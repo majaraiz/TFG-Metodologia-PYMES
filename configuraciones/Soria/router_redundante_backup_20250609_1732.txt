@@ -1,0 +1,242 @@
+
+
+!
+! ================================================================
+! Metodologia de Automatizacion de Redes para PYMEs - TFG MAJO
+! ================================================================
+! Sede: Soria
+! Tipo: redundante
+! Router: BACKUP (Redundante)
+! Bloques activos: segmentacion enrutamiento ! Fecha generacion: 2025-06-09 17:32:17
+! ================================================================
+!
+upgrade fpd auto
+version 15.3
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+service sequence-numbers
+!
+hostname Soria_backup
+!
+boot-start-marker
+boot-end-marker
+!
+aqm-register-fnf
+!
+ip vrf main
+ rd 65000:1
+ route-target export 65000:1
+ route-target import 65000:1
+!
+ip vrf invitados
+ rd 65000:2
+ route-target export 65000:2
+ route-target import 65000:2
+!
+ip vrf gestion
+ rd 65000:99
+ route-target export 65000:99
+ route-target import 65000:99
+!
+!
+!
+!
+ip domain name eveng.com
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+track 1 interface FastEthernet1/0 line-protocol
+ delay down 10 up 10
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ description Loopback gestion - Soria
+ ip vrf forwarding gestion
+ ip address 172.19.5.21 255.255.255.255
+!
+interface FastEthernet0/0 
+ description LAN
+ no ip address
+ duplex full
+ no shutdown
+!
+interface FastEthernet0/0.2
+ description Subinterfaz LAN VRF main
+ encapsulation dot1Q 2
+ ip vrf forwarding main
+ ip address 192.168.5.3 255.255.255.0
+ standby 2 ip 192.168.5.1
+ standby 2 priority 98
+ standby 2 preempt delay minimum 60
+ standby 2 name HSRP-main
+ standby 2 track 1 decrement 15
+ no shutdown
+!
+interface FastEthernet0/0.56
+ description Subinterfaz LAN VRF invitados
+ encapsulation dot1Q 56
+ ip vrf forwarding invitados
+ ip address 172.16.5.3 255.255.255.128
+ ip access-group ACL_IN_INVITADOS in
+ standby 56 ip 172.16.5.1
+ standby 56 priority 98
+ standby 56 preempt delay minimum 60
+ standby 56 name HSRP-invitados
+ standby 56 track 1 decrement 15
+ no shutdown
+!
+interface FastEthernet0/0.99
+ description Subinterfaz LAN VRF gestion
+ encapsulation dot1Q 99
+ ip vrf forwarding gestion
+ ip address 172.19.5.3 255.255.255.240
+ standby 99 ip 172.19.5.1
+ standby 99 priority 98
+ standby 99 preempt delay minimum 60
+ standby 99 name HSRP-gestion
+ standby 99 track 1 decrement 15
+ no shutdown
+!
+interface FastEthernet1/0 
+ description WAN
+ no ip address
+ duplex full
+ no shutdown
+!
+interface FastEthernet1/0.100
+ description Subinterfaz WAN VRF main - Conexion MPLS Operador
+ encapsulation dot1Q 100
+ ip vrf forwarding main
+ ip address 10.0.0.52 255.255.255.0
+ no shutdown
+!
+interface FastEthernet1/0.156
+ description Subinterfaz WAN VRF invitados - Conexion MPLS Operador
+ encapsulation dot1Q 156
+ ip vrf forwarding invitados
+ ip address 10.16.0.52 255.255.255.0
+ no shutdown
+!
+interface FastEthernet1/0.199
+ description Subinterfaz WAN VRF gestion - Conexion MPLS Operador
+ encapsulation dot1Q 199
+ ip vrf forwarding gestion
+ ip address 10.199.0.52 255.255.255.0
+ no shutdown
+!
+router bgp 65000
+ bgp router-id 10.0.0.52
+ bgp log-neighbor-changes
+ no bgp default ipv4-unicast
+ !
+ address-family ipv4 vrf main
+  redistribute connected
+  redistribute static
+  neighbor Nube_main peer-group
+  neighbor Nube_main remote-as 65000
+  neighbor Nube_main timers 10 30
+  neighbor Nube_main route-map BGPOUT_main out
+  neighbor 10.0.0.254 peer-group Nube_main
+  neighbor 10.0.0.254 activate
+ exit-address-family
+ !
+ address-family ipv4 vrf invitados
+  redistribute connected
+  redistribute static
+  neighbor Nube_invitados peer-group
+  neighbor Nube_invitados remote-as 65000
+  neighbor Nube_invitados timers 10 30
+  neighbor Nube_invitados route-map BGPOUT_invitados out
+  neighbor 10.16.0.254 peer-group Nube_invitados
+  neighbor 10.16.0.254 activate
+ exit-address-family
+ !
+ address-family ipv4 vrf gestion
+  redistribute connected
+  redistribute static
+  neighbor Nube_gestion peer-group
+  neighbor Nube_gestion remote-as 65000
+  neighbor Nube_gestion timers 10 30
+  neighbor Nube_gestion route-map BGPOUT_gestion out
+  neighbor 10.199.0.254 peer-group Nube_gestion
+  neighbor 10.199.0.254 activate
+ exit-address-family
+ !
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+ip access-list extended ACL_IN_INVITADOS
+ remark --- PERMITIR HSRP entre routers ---
+ permit udp any host 224.0.0.2 eq 1985
+ permit udp any any eq 1985
+ remark --- DENEGAR acceso a redes corporativas ---
+ deny   ip 172.16.5.0 0.0.0.127 192.168.0.0 0.0.255.255
+ remark --- DENEGAR acceso a redes de gestion ---
+ deny   ip 172.16.5.0 0.0.0.127 172.19.0.0 0.0.255.255
+ remark --- DENEGAR acceso a otras redes de invitados ---
+ deny   ip 172.16.5.0 0.0.0.127 172.16.0.0 0.0.255.255
+ remark --- DENEGAR acceso a redes internas del operador ---
+ deny   ip 172.16.5.0 0.0.0.127 10.0.0.0 0.255.255.255
+ remark --- PERMITIR solo salida a Internet ---
+ permit ip any any
+!
+ip prefix-list REDESCLIENTE_main seq 10 permit 192.168.5.0/24
+ip prefix-list REDESCLIENTE_invitados seq 10 permit 172.16.5.0/25
+ip prefix-list REDESCLIENTE_gestion seq 10 permit 172.19.5.0/28
+ip prefix-list REDESCLIENTE_gestion seq 20 permit 172.19.5.21/32
+!
+route-map BGPOUT_main permit 10
+ match ip address prefix-list REDESCLIENTE_main
+ set metric 200
+!
+route-map BGPOUT_invitados permit 10
+ match ip address prefix-list REDESCLIENTE_invitados
+ set metric 200
+!
+route-map BGPOUT_gestion permit 10
+ match ip address prefix-list REDESCLIENTE_gestion
+ set metric 200
+!
+route-map BGPOUT_main deny 20
+!
+!
+!
+!
+control-plane
+!
+!
+mgcp behavior rsip-range tgcp-only
+mgcp behavior comedia-role none
+mgcp behavior comedia-check-media-src disable
+mgcp behavior comedia-sdp-force disable
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+end

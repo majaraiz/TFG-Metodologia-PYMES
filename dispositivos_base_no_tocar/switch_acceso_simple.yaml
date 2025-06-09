@@ -1,8 +1,11 @@
 # ================================================================
-# CONFIGURACION SWITCH ACCESO - PLANTILLA GENERICA
+# CONFIGURACION SWITCH ACCESO V2 - PLANTILLA GENERICA
 # ================================================================
 # Version simplificada para TFG - Todos los switches EVE-NG tienen
 # las mismas capacidades basicas (VLANs, Spanning Tree, Port Security)
+# Soporta SEDE SIMPLE (1 router) y SEDE REDUNDANTE (2 routers)
+# 1 o 2 interfaces trunk segun corresponda
+# Modfificado para poder tener soporte para sedes con redundancia
 
 # ================================================================
 # IDENTIFICACION DEL DISPOSITIVO
@@ -18,13 +21,17 @@ switch:
 interfaces:
   # Conexiones trunk hacia routers
   trunk:
-    hacia_router: "CAMBIAR_IF_ROUTER"   # Ej: "Ethernet0/0", "FastEthernet0/1"
-    # NOTA: Si sede tiene 2 routers (redundante), se añadirá automaticamente segunda interfaz
+    # SEDE SIMPLE: Solo completar hacia_router
+    hacia_router: "CAMBIAR_IF_ROUTER"   # Ej: "Ethernet0/0" (para sede simple)
+    
+    # SEDE REDUNDANTE: Completar AMBAS interfaces
+    hacia_router_principal: "CAMBIAR_IF_PRINCIPAL" # Ej: "Ethernet0/0" (para sede con redundancia)
+    hacia_router_backup: "CAMBIAR_IF_BACKUP"       # Ej: "Ethernet0/1" (para sede con redundancia)
   
   # Puertos de acceso para usuarios (rango)
   acceso:
     rango_usuarios: "CAMBIAR_RANGO"     # Ej: "Ethernet1/0-3", "FastEthernet1/0-7"
-    # NOTA: Se distribuirán automaticamente entre VLANs main e invitados al 50%
+    # NOTA: Se distribuiran automaticamente entre VLANs main e invitados
 
 # ================================================================
 # CONFIGURACION ESPECIFICA
@@ -40,27 +47,47 @@ configuracion:
 # REFERENCIAS A OTROS ARCHIVOS (NO CAMBIAR)
 # ================================================================
 referencias:
-  sede_config: "sede_simple.yaml"      
+  sede_config: "sede_simple.yaml o sede_redundante.yaml"      
   global_config: "global_config.yaml"  
 
 # ================================================================
 # GUIA RAPIDA PARA EL TECNICO  
 # ================================================================
-# SOLO 3 CAMPOS A COMPLETAR:
+# CAMPOS A COMPLETAR SEGUN TIPO DE SEDE:
 #
-# 1. interfaces.trunk.hacia_router  - Interfaz conectada al router
+# SEDE SIMPLE (1 router):
+# ======================
+# 1. interfaces.trunk.hacia_router - Interfaz conectada al router unico
 # 2. interfaces.acceso.rango_usuarios - Rango de puertos para usuarios
 # 3. ubicacion - Opcional, para inventario
+#
+# SEDE REDUNDANTE (2 routers):
+# ===========================
+# 1. interfaces.trunk.hacia_router_principal - Interfaz al router principal
+# 2. interfaces.trunk.hacia_router_backup - Interfaz al router backup  
+# 3. interfaces.acceso.rango_usuarios - Rango de puertos para usuarios
+# 4. ubicacion - Opcional, para inventario
+#
+# EJEMPLOS DE INTERFACES TRUNK:
+# - Sede simple: hacia_router: "Ethernet0/0"
+# - Sede redundante: hacia_router_principal: "Ethernet0/0"
+#                    hacia_router_backup: "Ethernet0/1"
 #
 # EJEMPLOS DE RANGOS:
 # - "Ethernet1/0-3" = 4 puertos (1/0, 1/1, 1/2, 1/3)
 # - "FastEthernet0/1-8" = 8 puertos
 # - "GigabitEthernet1/0-1" = 2 puertos
 #
+# DETECCION AUTOMATICA:
+# - El template detecta el tipo de sede desde sede.tipo
+# - Si sede.tipo == "simple" -> usa hacia_router (1 interfaz)
+# - Si sede.tipo == "redundante" -> usa hacia_router_principal y hacia_router_backup (2 interfaces)
+#
 # DISTRIBUCION AUTOMATICA:
 # - 50% puertos para VLAN main (corporativo)
 # - 50% puertos para VLAN invitados
 # - VLAN gestion solo en interfaz de gestion
+# - ACLs de gestion se adaptan automaticamente al numero de routers
 #
 # NOTA: VLANs, IPs, ACLs se heredan automaticamente
-#       de sede_simple.yaml y global_config.yaml
+#       de sede_simple.yaml/sede_redundante.yaml y global_config.yaml

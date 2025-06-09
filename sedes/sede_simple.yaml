@@ -10,18 +10,18 @@
 # ================================================================
 sede:
   # Identificacion de la sede
-  nombre: "Sede_Alcorcon"      # Ej: "Sede_Madrid", "Oficina_Murcia"
+  nombre: "Alcorcon"      # Ej: "Sede_Madrid", "Oficina_Murcia"
   numero: 3             # Ej: 1, 2, 3... (debe ser unico)
-  ubicacion: "Alcorcon Espania"     # Ej: "Madrid - España", "Murcia"
+  ubicacion: "Alcorcon"     # Ej: "Madrid - Espana", "Murcia"
   tipo: "simple"                     # NO CAMBIAR - siempre "simple"
   
   # Bloques funcionales a implementar en esta sede
   bloques_activos:
     segmentacion: true              # NO CAMBIAR - siempre necesario
     enrutamiento: true              # NO CAMBIAR - siempre necesario  
-    cifrado: false                # true or false - Cifrado contra sede central
+    cifrado: false        # true/false - Cifrado contra sede central
     qos: false                      # NO CAMBIAR - no implementado aun
-    gestion: false                   # NO CAMBIAR - siempre recomendado
+    gestion: true                   # NO CAMBIAR - siempre recomendado
 
 # ================================================================
 # DIRECCIONAMIENTO LAN (por VRF)
@@ -82,7 +82,7 @@ cifrado:
   # Loopback para IPSec (origen tuneles)
   loopback_ipsec:
     interfaz: "Loopback55"              # NO CAMBIAR - estandar metodologia
-    ip: "172.26.28.13"              # Ej: "172.26.28.10" (IP unica para IPSec)
+    ip: "172.26.28.31"              # Ej: "172.26.28.10" (IP unica para IPSec)
     descripcion: "Origen IPSec VRF main" # NO CAMBIAR
     
   # Destinos IPSec (sedes con las que cifrar)

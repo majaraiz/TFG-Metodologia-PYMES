@@ -1,0 +1,30 @@
+
+
+!
+! ================================================================
+! CONFIGURACION SEDE CENTRAL - Agregar cifrado para: Alcorcon
+! ================================================================
+! Sede SIMPLE: Alcorcon tiene 1 router
+! Aplicar en AMBOS routers de sede central (principal + backup)
+!
+crypto keyring CLAVE1 vrf main
+  pre-shared-key address 172.26.28.31 key C1fr4d0
+!
+crypto isakmp profile PERFIL1
+   match identity address 172.26.28.31 255.255.255.255 main
+!
+crypto map mapacifrado 2003 ipsec-isakmp
+ description Tunel IPSec VRF main contra Alcorcon
+ set peer 172.26.28.31
+ set security-association idle-time 600
+ set transform-set transformada
+ set isakmp-profile PERFIL1
+ match address 2003
+!
+access-list 2003 remark === TUNEL IPSEC VRF main: Sede Central hacia Alcorcon ===
+access-list 2003 permit ip 192.168.101.0 0.0.0.255 192.168.3.0 0.0.0.255
+!
+!
+! ================================================================
+! FIN - Aplicar con copy running-config startup-config
+! ================================================================

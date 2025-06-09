@@ -13,7 +13,7 @@
 router:
   # Datos basicos del dispositivo
   hostname: "auto"                      # Se construye automaticamente
-  ubicacion: "adsfsdfsa"        # Ej: "Rack A", "Armario Principal" (opcional)
+  ubicacion: "SalaA"        # Ej: "Rack A", "Armario Principal" (opcional)
 
 # ================================================================
 # INTERFACES FISICAS 

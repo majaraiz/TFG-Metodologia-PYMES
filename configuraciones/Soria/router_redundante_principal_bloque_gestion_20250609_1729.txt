@@ -1,0 +1,150 @@
+
+
+!
+! ================================================================
+! CONFIGURACION GESTION INCREMENTAL - ROUTER Soria
+! ================================================================
+! Router: PRINCIPAL (Redundante)
+! Copiar y pegar estos comandos para anadir gestion completa:
+!
+! IMPORTANTE: Ejecutar PRIMERO manualmente estos comandos:
+! enable
+! configure terminal
+! crypto key generate rsa modulus 1024
+! exit
+! copy running-config startup-config
+!
+! DESPUES aplicar la configuracion que sigue:
+!
+enable secret pursinga
+!
+aaa new-model
+!
+!
+aaa authentication login default local
+!
+!
+!
+!
+!
+aaa session-id common
+!
+username admin privilege 15 secret cisco
+!
+ip ssh version 2
+!
+! ================================================================
+! CONFIGURACION LOGGING
+! ================================================================
+logging buffered 32768
+logging console critical
+logging monitor warnings
+logging facility local0
+logging source-interface Loopback0 vrf gestion
+logging host 172.19.204.254
+!
+! ================================================================
+! CONFIGURACION NETFLOW
+! ================================================================
+ip flow-export source Loopback0
+ip flow-export version 9
+ip flow-export destination 172.19.204.254 2055
+!
+! ================================================================
+! ACCESS LISTS DE GESTION
+! ================================================================
+ip access-list standard SNMP-RO-ACL
+ permit 172.19.204.254
+ deny   any log
+!
+ip access-list standard SNMP-RW-ACL
+ permit 172.19.204.254
+ deny   any log
+!
+ip access-list extended ACL-MGMT
+ remark --- PERMITIR SSH desde servidor gestion centralizado ---
+ permit tcp host 172.19.204.254 any eq 22 log
+ deny   ip any any log
+!
+! ================================================================
+! CONFIGURACION SNMP
+! ================================================================
+snmp-server community TFG-RO RO SNMP-RO-ACL
+snmp-server community TFG-RW RW SNMP-RW-ACL
+snmp-server location Sede_5_Router_principal
+snmp-server contact majaraiz@alu.ucam.edu
+snmp-server chassis-id Soria_ppal
+snmp-server enable traps snmp authentication linkdown linkup coldstart warmstart
+snmp-server enable traps bgp
+snmp-server enable traps config
+snmp-server enable traps hsrp
+snmp-server enable traps ike tunnel start
+snmp-server enable traps ike tunnel stop
+snmp-server enable traps ipsec tunnel start
+snmp-server enable traps ipsec tunnel stop
+snmp-server host 172.19.204.254 version 2c TFG-RO
+!
+! ================================================================
+! CONFIGURACION NTP
+! ================================================================
+ntp authentication-key 1 md5 0225085A1D03300F787E 7
+ntp authenticate
+ntp trusted-key 1
+ntp source Loopback0
+ntp update-calendar
+ntp server vrf gestion 172.19.204.254 prefer
+!
+! ================================================================
+! BANNER Y ACCESO REMOTO
+! ================================================================
+banner motd ^C================================================================
+     Metodologia de Automatizacion de Redes para PYMEs
+          Trabajo Fin de Grado - MAJO
+               ACCESO RESTRINGIDO
+================================================================
+^C
+!
+line con 0
+ stopbits 1
+line aux 0
+ stopbits 1
+line vty 0 4
+ access-class ACL-MGMT in
+ exec-timeout 30 0
+ transport input ssh
+!
+! ================================================================
+! AnADIR NETFLOW A INTERFACES EXISTENTES
+! ================================================================
+! NOTA: Aplicar manualmente a interfaces ya configuradas:
+!
+interface FastEthernet0/0.2
+ ip flow ingress
+!
+interface FastEthernet0/0.56
+ ip flow ingress
+!
+interface FastEthernet0/0.99
+ ip flow ingress
+!
+interface FastEthernet1/0.100
+ ip flow ingress
+!
+interface FastEthernet1/0.156
+ ip flow ingress
+!
+interface FastEthernet1/0.199
+ ip flow ingress
+!
+! ================================================================
+! NOTAS PARA SEDE REDUNDANTE:
+! ================================================================
+! - Este es el ROUTER PRINCIPAL
+! - Repetir configuracion en el router backup
+! - Ambos routers reportaran metricas independientes al servidor SNMP/Syslog
+! - El switch debe permitir SSH desde ambos routers
+! ================================================================
+!
+! ================================================================
+! FIN CONFIGURACION GESTION - Aplicar con copy running-config startup-config
+! ================================================================

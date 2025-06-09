@@ -126,7 +126,7 @@ gestion:
     version: 2
     timeout: 30
     
-  # Usuarios y contraseñas estandar
+  # Usuarios y contrasenas estandar
   usuarios:
     admin:
       username: "admin"

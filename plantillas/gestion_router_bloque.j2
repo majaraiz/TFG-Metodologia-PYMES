@@ -1,8 +1,28 @@
+{# ================================================================ #}
+{# PLANTILLA JINJA2 V2 - BLOQUE GESTION ROUTER UNIVERSAL             #}
+{# ================================================================ #}
+{# Genera configuracion de gestion incremental basandose en:       #}
+{# - global_config.yaml (estandares metodologia)                   #}
+{# - sede_simple.yaml o sede_redundante.yaml (parametros sede)     #}
+{# SOPORTA: router_simple, router_redundante_principal, _backup    #}
+{# ================================================================ #}
+
+{# ================================================================ #}
+{# LOGICA DE DETECCION DE TIPO DE ROUTER                           #}
+{# ================================================================ #}
+{% set es_backup = tipo_dispositivo == 'router_redundante_backup' %}
+{% set es_redundante = tipo_dispositivo.startswith('router_redundante') %}
+
 !
 ! ================================================================
 ! CONFIGURACION GESTION INCREMENTAL - ROUTER {{ sede.nombre }}
 ! ================================================================
-! Copiar y pegar estos comandos para añadir gestión completa:
+{% if es_redundante %}
+! Router: {{ 'BACKUP' if es_backup else 'PRINCIPAL' }} (Redundante)
+{% else %}
+! Router: SIMPLE
+{% endif %}
+! Copiar y pegar estos comandos para anadir gestion completa:
 !
 ! IMPORTANTE: Ejecutar PRIMERO manualmente estos comandos:
 ! enable
@@ -68,9 +88,9 @@ ip access-list extended ACL-MGMT
 ! ================================================================
 snmp-server community {{ global_config.gestion.snmp.communities.readonly }} RO SNMP-RO-ACL
 snmp-server community {{ global_config.gestion.snmp.communities.readwrite }} RW SNMP-RW-ACL
-snmp-server location Sede_{{ sede.numero }}_Router_principal
+snmp-server location Sede_{{ sede.numero }}_Router_{{ 'backup' if es_backup else 'principal' }}
 snmp-server contact {{ global_config.gestion.snmp.contact }}
-snmp-server chassis-id {{ sede.nombre | replace(" ", "_") }}_ppal
+snmp-server chassis-id {{ sede.nombre | replace(" ", "_") }}_{{ 'backup' if es_backup else 'ppal' }}
 {% for trap in global_config.gestion.snmp.traps %}
 snmp-server enable traps {{ trap }}
 {% endfor %}
@@ -101,7 +121,7 @@ line vty 0 4
  transport input ssh
 !
 ! ================================================================
-! AÑADIR NETFLOW A INTERFACES EXISTENTES
+! AnADIR NETFLOW A INTERFACES EXISTENTES
 ! ================================================================
 ! NOTA: Aplicar manualmente a interfaces ya configuradas:
 !
@@ -122,6 +142,17 @@ interface {{ interfaces.wan }}.{{ wan.invitados.vlan }}
 !
 interface {{ interfaces.wan }}.{{ wan.gestion.vlan }}
  ip flow ingress
+!
+{% if es_redundante %}
+! ================================================================
+! NOTAS PARA SEDE REDUNDANTE:
+! ================================================================
+! - Este es el {{ 'ROUTER BACKUP' if es_backup else 'ROUTER PRINCIPAL' }}
+! - Repetir configuracion en el {{ 'router principal' if es_backup else 'router backup' }}
+! - Ambos routers reportaran metricas independientes al servidor SNMP/Syslog
+! - El switch debe permitir SSH desde ambos routers
+! ================================================================
+{% endif %}
 !
 ! ================================================================
 ! FIN CONFIGURACION GESTION - Aplicar con copy running-config startup-config

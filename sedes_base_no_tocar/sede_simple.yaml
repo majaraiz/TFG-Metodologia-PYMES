@@ -12,7 +12,7 @@ sede:
   # Identificacion de la sede
   nombre: "CAMBIAR_NOMBRE_SEDE"      # Ej: "Sede_Madrid", "Oficina_Murcia"
   numero: CAMBIAR_NUMERO             # Ej: 1, 2, 3... (debe ser unico)
-  ubicacion: "CAMBIAR_UBICACION"     # Ej: "Madrid - España", "Murcia"
+  ubicacion: "CAMBIAR_UBICACION"     # Ej: "Madrid - Espana", "Murcia"
   tipo: "simple"                     # NO CAMBIAR - siempre "simple"
   
   # Bloques funcionales a implementar en esta sede

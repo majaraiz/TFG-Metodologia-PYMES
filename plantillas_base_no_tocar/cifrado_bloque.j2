@@ -1,8 +1,28 @@
+{# ================================================================ #}
+{# PLANTILLA JINJA2 V2 - BLOQUE CIFRADO UNIVERSAL                    #}
+{# ================================================================ #}
+{# Genera configuracion de cifrado incremental basandose en:       #}
+{# - global_config.yaml (estandares metodologia)                   #}
+{# - sede_simple.yaml o sede_redundante.yaml (parametros sede)     #}
+{# SOPORTA: router_simple, router_redundante_principal, _backup    #}
+{# ================================================================ #}
+
+{# ================================================================ #}
+{# LOGICA DE DETECCION DE TIPO DE ROUTER                           #}
+{# ================================================================ #}
+{% set es_backup = tipo_dispositivo == 'router_redundante_backup' %}
+{% set es_redundante = tipo_dispositivo.startswith('router_redundante') %}
+
 !
 ! ================================================================
 ! CONFIGURACION CIFRADO INCREMENTAL - {{ sede.nombre }}
 ! ================================================================
-! Copiar y pegar estos comandos para añadir cifrado:
+{% if es_redundante %}
+! Router: {{ 'BACKUP' if es_backup else 'PRINCIPAL' }} (Redundante)
+{% else %}
+! Router: SIMPLE
+{% endif %}
+! Copiar y pegar estos comandos para anadir cifrado:
 !
 crypto keyring CLAVE{{ global_config.segmentacion.vrfs.main.nombre }} vrf {{ global_config.segmentacion.vrfs.main.nombre }}
 {% for peer in cifrado.destinos.sede_central.peers %}
@@ -30,12 +50,22 @@ crypto ipsec transform-set {{ global_config.cifrado.ipsec.transform_set }} {{ gl
  mode {{ global_config.cifrado.ipsec.mode }}
 crypto ipsec df-bit clear
 !
+{# Detecta automaticamente que loopback IPSec usar #}
+{% if es_backup and cifrado.loopback_ipsec_backup is defined %}
+interface {{ cifrado.loopback_ipsec_backup.interfaz }}
+ description {{ cifrado.loopback_ipsec_backup.descripcion }}
+ ip vrf forwarding {{ global_config.segmentacion.vrfs.main.nombre }}
+ ip address {{ cifrado.loopback_ipsec_backup.ip }} 255.255.255.255
+!
+crypto map mapacifrado local-address {{ cifrado.loopback_ipsec_backup.interfaz }}
+{% else %}
 interface {{ cifrado.loopback_ipsec.interfaz }}
  description {{ cifrado.loopback_ipsec.descripcion }}
  ip vrf forwarding {{ global_config.segmentacion.vrfs.main.nombre }}
  ip address {{ cifrado.loopback_ipsec.ip }} 255.255.255.255
 !
 crypto map mapacifrado local-address {{ cifrado.loopback_ipsec.interfaz }}
+{% endif %}
 crypto map mapacifrado {{ cifrado.destinos.sede_central.crypto_map_id }} ipsec-isakmp
  description Tunel IPSec VRF {{ global_config.segmentacion.vrfs.main.nombre }} contra {{ cifrado.destinos.sede_central.nombre }}
 {% for peer in cifrado.destinos.sede_central.peers %}
@@ -55,14 +85,27 @@ access-list {{ cifrado.destinos.sede_central.crypto_map_id }} permit ip {{ red_l
 {% endfor %}
 {% endfor %}
 !
+{# Detecta automaticamente que loopback incluir en prefix-list #}
+{% if es_backup and cifrado.loopback_ipsec_backup is defined %}
+ip prefix-list REDESCLIENTE_main seq 30 permit {{ cifrado.loopback_ipsec_backup.ip }}/32
+{% else %}
 ip prefix-list REDESCLIENTE_main seq 30 permit {{ cifrado.loopback_ipsec.ip }}/32
+{% endif %}
+!
+{% if es_redundante %}
+! ==================================================================================
+! RECORDATORIO PARA SEDE REDUNDANTE:
+! ==================================================================================
+! - Este es el {{ 'ROUTER BACKUP' if es_backup else 'ROUTER PRINCIPAL' }}
+! - Repetir proceso en el {{ 'router principal' if es_backup else 'router backup' }}  
+! - AMBOS routers deben anadirse al cifrado de sede central
+! ==================================================================================
+{% endif %}
 !
 ! ==================================================================================
-! RECORDATORIO ---->>>  HAY QUE AÑADIR EL CIFRADO CONTRA LA SEDE EN EL PUNTO CENTRAL
+! RECORDATORIO ---->>>  HAY QUE AnADIR EL CIFRADO CONTRA LA SEDE EN EL PUNTO CENTRAL
 ! ==================================================================================
-
-
-
+!
 ! ================================================================
 ! FIN CONFIGURACION CIFRADO - Aplicar con copy running-config startup-config
 ! ================================================================

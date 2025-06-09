@@ -1,11 +1,18 @@
 {# ================================================================ #}
-{# PLANTILLA JINJA2 - ROUTER SEDE SIMPLE - REORGANIZADA           #}
+{# PLANTILLA JINJA2 - ROUTER V2                            #}
 {# ================================================================ #}
 {# Genera configuracion completa del router basandose en:          #}
 {# - global_config.yaml (estandares metodologia)                   #}
-{# - sede_simple.yaml (parametros sede)                            #}
+{# - sede_simple.yaml o sede_redundante.yaml (parametros sede)     #}
 {# - router_simple.yaml (datos dispositivo)                        #}
+{# SOPORTA: router_simple, router_redundante_principal, _backup    #}
 {# ================================================================ #}
+
+{# ================================================================ #}
+{# LOGICA DE DETECCION DE TIPO DE ROUTER                           #}
+{# ================================================================ #}
+{% set es_backup = tipo_dispositivo == 'router_redundante_backup' %}
+{% set es_redundante = tipo_dispositivo.startswith('router_redundante') %}
 
 !
 ! ================================================================
@@ -13,6 +20,11 @@
 ! ================================================================
 ! Sede: {{ sede.nombre }}
 ! Tipo: {{ sede.tipo }}
+{% if es_redundante %}
+! Router: {{ 'BACKUP' if es_backup else 'PRINCIPAL' }} (Redundante)
+{% else %}
+! Router: SIMPLE
+{% endif %}
 ! Bloques activos: {% for bloque, activo in sede.bloques_activos.items() %}{% if activo %}{{ bloque }} {% endif %}{% endfor %}
 ! Fecha generacion: {{ fecha_generacion }}
 ! ================================================================
@@ -31,7 +43,7 @@ service password-encryption
 service sequence-numbers
 {% endif %}
 !
-hostname {{ sede.nombre | replace(" ", "_") }}_ppal
+hostname {{ sede.nombre | replace(" ", "_") }}_{{ 'backup' if es_backup else 'ppal' }}
 !
 boot-start-marker
 boot-end-marker
@@ -107,7 +119,12 @@ crypto ipsec df-bit clear
 !
 !
 !
+{# Detecta automaticamente que loopback IPSec usar #}
+{% if es_backup and cifrado.loopback_ipsec_backup is defined %}
+crypto map mapacifrado local-address {{ cifrado.loopback_ipsec_backup.interfaz }}
+{% else %}
 crypto map mapacifrado local-address {{ cifrado.loopback_ipsec.interfaz }}
+{% endif %}
 crypto map mapacifrado {{ cifrado.destinos.sede_central.crypto_map_id }} ipsec-isakmp
  description Tunel IPSec VRF {{ global_config.segmentacion.vrfs.main.nombre }} contra {{ cifrado.destinos.sede_central.nombre }}
 {% for peer in cifrado.destinos.sede_central.peers %}
@@ -131,13 +148,26 @@ crypto map mapacifrado {{ cifrado.destinos.sede_central.crypto_map_id }} ipsec-i
 interface Loopback0
  description Loopback gestion - {{ sede.nombre }}
  ip vrf forwarding {{ global_config.segmentacion.vrfs.gestion.nombre }}
+{# Detecta automaticamente que IP de gestion usar #}
+{% if es_backup and direccionamiento.gestion.ip_loopback_backup is defined %}
+ ip address {{ direccionamiento.gestion.ip_loopback_backup }} 255.255.255.255
+{% else %}
  ip address {{ direccionamiento.gestion.ip_loopback }} 255.255.255.255
+{% endif %}
 !
 {% if sede.bloques_activos.cifrado %}
+{# Detecta automaticamente que loopback IPSec configurar #}
+{% if es_backup and cifrado.loopback_ipsec_backup is defined %}
+interface {{ cifrado.loopback_ipsec_backup.interfaz }}
+ description {{ cifrado.loopback_ipsec_backup.descripcion }}
+ ip vrf forwarding {{ global_config.segmentacion.vrfs.main.nombre }}
+ ip address {{ cifrado.loopback_ipsec_backup.ip }} 255.255.255.255
+{% else %}
 interface {{ cifrado.loopback_ipsec.interfaz }}
  description {{ cifrado.loopback_ipsec.descripcion }}
  ip vrf forwarding {{ global_config.segmentacion.vrfs.main.nombre }}
  ip address {{ cifrado.loopback_ipsec.ip }} 255.255.255.255
+{% endif %}
 !
 {% endif %}
 {# ================================================================ #}
@@ -154,7 +184,12 @@ interface {{ interfaces.lan }}.{{ vrf_config.vlan }}
  description Subinterfaz LAN VRF {{ vrf_name }}
  encapsulation dot1Q {{ vrf_config.vlan }}
  ip vrf forwarding {{ vrf_name }}
+{# Detecta automaticamente que IP LAN usar (backup si existe, sino principal) #}
+{% if es_backup and direccionamiento[vrf_name].ip_router_backup is defined %}
+ ip address {{ direccionamiento[vrf_name].ip_router_backup }} {{ direccionamiento[vrf_name].red_lan | get_netmask_from_cidr_network }}
+{% else %}
  ip address {{ direccionamiento[vrf_name].ip_router }} {{ direccionamiento[vrf_name].red_lan | get_netmask_from_cidr_network }}
+{% endif %}
 {% if vrf_name == 'invitados' %}
  ip access-group ACL_IN_INVITADOS in
 {% endif %}
@@ -162,7 +197,12 @@ interface {{ interfaces.lan }}.{{ vrf_config.vlan }}
  ip flow ingress
 {% endif %}
  standby {{ vrf_config.vlan }} ip {{ direccionamiento[vrf_name].ip_gateway }}
+{# Detecta automaticamente que prioridad HSRP usar #}
+{% if es_redundante %}
+ standby {{ vrf_config.vlan }} priority {{ global_config.enrutamiento.hsrp.prioridades.backup_remoto if es_backup else global_config.enrutamiento.hsrp.prioridades.principal }}
+{% else %}
  standby {{ vrf_config.vlan }} priority {{ global_config.enrutamiento.hsrp.prioridades[configuracion.hsrp.tipo_router] }}
+{% endif %}
  standby {{ vrf_config.vlan }} preempt delay minimum {{ configuracion.hsrp.preempt_delay }}
  standby {{ vrf_config.vlan }} name HSRP-{{ vrf_name }}
  standby {{ vrf_config.vlan }} track 1 decrement {{ global_config.enrutamiento.hsrp.track_decrement }}
@@ -183,7 +223,12 @@ interface {{ interfaces.wan }}.{{ wan[vrf_name].vlan }}
  description Subinterfaz WAN VRF {{ vrf_name }} - Conexion MPLS Operador
  encapsulation dot1Q {{ wan[vrf_name].vlan }}
  ip vrf forwarding {{ vrf_name }}
+{# Detecta automaticamente que IP WAN usar (backup si existe, sino principal) #}
+{% if es_backup and wan[vrf_name].ip_router_backup is defined %}
+ ip address {{ wan[vrf_name].ip_router_backup }} {{ wan[vrf_name].mascara }}
+{% else %}
  ip address {{ wan[vrf_name].ip_router }} {{ wan[vrf_name].mascara }}
+{% endif %}
 {% if sede.bloques_activos.gestion %}
  ip flow ingress
 {% endif %}
@@ -197,7 +242,12 @@ interface {{ interfaces.wan }}.{{ wan[vrf_name].vlan }}
 {# BGP - BLOQUE ENRUTAMIENTO                                       #}
 {# ================================================================ #}
 router bgp {{ global_config.enrutamiento.bgp.as_number }}
+{# Detecta automaticamente que IP usar como router-id #}
+{% if es_backup and wan.main.ip_router_backup is defined %}
+ bgp router-id {{ wan.main.ip_router_backup }}
+{% else %}
  bgp router-id {{ wan.main.ip_router }}
+{% endif %}
  bgp log-neighbor-changes
  no bgp default ipv4-unicast
  !
@@ -243,17 +293,32 @@ ip access-list extended ACL_IN_INVITADOS
 {% for vrf_name, vrf_config in global_config.segmentacion.vrfs.items() %}
 ip prefix-list REDESCLIENTE_{{ vrf_name }} seq 10 permit {{ direccionamiento[vrf_name].red_lan }}
 {% if vrf_name == 'gestion' %}
+{# Detecta automaticamente que loopback incluir en prefix-list #}
+{% if es_backup and direccionamiento.gestion.ip_loopback_backup is defined %}
+ip prefix-list REDESCLIENTE_{{ vrf_name }} seq 20 permit {{ direccionamiento.gestion.ip_loopback_backup }}/32
+{% else %}
 ip prefix-list REDESCLIENTE_{{ vrf_name }} seq 20 permit {{ direccionamiento.gestion.ip_loopback }}/32
 {% endif %}
+{% endif %}
 {% if vrf_name == 'main' and sede.bloques_activos.cifrado %}
+{# Detecta automaticamente que loopback IPSec incluir en prefix-list #}
+{% if es_backup and cifrado.loopback_ipsec_backup is defined %}
+ip prefix-list REDESCLIENTE_{{ vrf_name }} seq 30 permit {{ cifrado.loopback_ipsec_backup.ip }}/32
+{% else %}
 ip prefix-list REDESCLIENTE_{{ vrf_name }} seq 30 permit {{ cifrado.loopback_ipsec.ip }}/32
+{% endif %}
 {% endif %}
 {% endfor %}
 !
 {% for vrf_name in global_config.segmentacion.vrfs.keys() %}
 route-map BGPOUT_{{ vrf_name }} permit 10
  match ip address prefix-list REDESCLIENTE_{{ vrf_name }}
+{# Detecta automaticamente que metrica BGP usar #}
+{% if es_redundante %}
+ set metric {{ global_config.enrutamiento.bgp.metricas.backup if es_backup else global_config.enrutamiento.bgp.metricas.principal }}
+{% else %}
  set metric {{ configuracion.bgp.metric_local }}
+{% endif %}
 !
 {% endfor %}
 route-map BGPOUT_main deny 20
@@ -354,9 +419,9 @@ ip access-list extended ACL-MGMT
 ! ================================================================
 snmp-server community {{ global_config.gestion.snmp.communities.readonly }} RO SNMP-RO-ACL
 snmp-server community {{ global_config.gestion.snmp.communities.readwrite }} RW SNMP-RW-ACL
-snmp-server location Sede_{{ sede.numero }}_Router_principal
+snmp-server location Sede_{{ sede.numero }}_Router_{{ 'backup' if es_backup else 'principal' }}
 snmp-server contact {{ global_config.gestion.snmp.contact }}
-snmp-server chassis-id {{ sede.nombre | replace(" ", "_") }}_ppal
+snmp-server chassis-id {{ sede.nombre | replace(" ", "_") }}_{{ 'backup' if es_backup else 'ppal' }}
 {% for trap in global_config.gestion.snmp.traps %}
 snmp-server enable traps {{ trap }}
 {% endfor %}
