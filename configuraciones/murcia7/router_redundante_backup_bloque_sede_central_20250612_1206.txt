@@ -1,0 +1,41 @@
+
+
+!
+! ================================================================
+! CONFIGURACION SEDE CENTRAL - Agregar cifrado para: murcia7
+! ================================================================
+! Sede REDUNDANTE: murcia7 tiene 2 routers (principal + backup)
+! Aplicar en AMBOS routers de sede central (principal + backup)
+!
+crypto keyring CLAVE1 vrf main
+  pre-shared-key address 172.26.28.71 key C1fr4d0
+  pre-shared-key address 172.26.28.72 key C1fr4d0
+!
+crypto isakmp profile PERFIL1
+   match identity address 172.26.28.71 255.255.255.255 main
+   match identity address 172.26.28.72 255.255.255.255 main
+!
+crypto map mapacifrado 2007 ipsec-isakmp
+ description Tunel IPSec VRF main contra murcia7
+ set peer 172.26.28.71
+ set peer 172.26.28.72
+ set security-association idle-time 600
+ set transform-set transformada
+ set isakmp-profile PERFIL1
+ match address 2007
+!
+access-list 2007 remark === TUNEL IPSEC VRF main: Sede Central hacia murcia7 ===
+access-list 2007 permit ip 192.168.101.0 0.0.0.255 192.168.7.0 0.0.0.255
+!
+! ================================================================
+! NOTAS PARA SEDE REDUNDANTE:
+! ================================================================
+! - murcia7 tiene 2 routers: 172.26.28.71 (principal) + 172.26.28.72 (backup)
+! - Ambos routers remotos pueden iniciar tuneles IPSec
+! - El failover es automatico via HSRP en la sede remota
+! - Esta configuracion se aplica en AMBOS routers de sede central
+! ================================================================
+!
+! ================================================================
+! FIN - Aplicar con copy running-config startup-config
+! ================================================================
