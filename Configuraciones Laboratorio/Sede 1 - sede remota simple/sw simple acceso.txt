@@ -1,0 +1,222 @@
+Switch_sede1#sh run
+Building configuration...
+
+Current configuration : 4213 bytes
+!
+! Last configuration change at 17:49:04 UTC Sat May 31 2025 by admin
+!
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+service compress-config
+!
+hostname Switch_sede1
+!
+boot-start-marker
+boot-end-marker
+!
+!
+logging buffered 32768
+logging console critical
+logging monitor warnings
+enable secret 5 $1$DYf4$0Stm4fS.pF.VWjf9.ID6l/
+enable password 7 094F471A1A0A
+!
+username admin privilege 15 password 7 030752180500
+aaa new-model
+!
+!
+aaa authentication login default local
+!
+!
+!
+!
+!
+!
+aaa session-id common
+!
+!
+!
+!
+!
+vtp mode transparent
+!
+!
+!
+ip domain-name eveng.com
+ip cef
+no ipv6 cef
+!
+!
+!
+spanning-tree mode rapid-pvst
+spanning-tree portfast edge bpduguard default
+spanning-tree extend system-id
+spanning-tree vlan 2,56,99 priority 24576
+!
+!
+vlan 2
+ name main
+!
+vlan 56
+ name invitados
+!
+vlan 99
+ name gestion
+!
+vlan 999
+ name nativa_sin_uso
+ shutdown
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Ethernet0/0
+ description Conexion_R1
+ switchport trunk allowed vlan 2,56,99
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 999
+ switchport mode trunk
+ switchport nonegotiate
+!
+interface Ethernet0/1
+ description Puerto no utilizado
+ shutdown
+!
+interface Ethernet0/2
+ description Puerto no utilizado
+ shutdown
+!
+interface Ethernet0/3
+ description Puerto no utilizado
+ shutdown
+ no cdp enable
+!
+interface Ethernet1/0
+ description PC - VLAN 2
+ switchport access vlan 2
+ switchport mode access
+ switchport port-security maximum 5
+ switchport port-security mac-address sticky
+ switchport port-security
+ no lldp transmit
+ no lldp receive
+ no cdp enable
+ spanning-tree portfast edge
+ spanning-tree bpdufilter enable
+!
+interface Ethernet1/1
+ description PC - VLAN 2
+ switchport access vlan 2
+ switchport mode access
+ switchport port-security maximum 5
+ switchport port-security mac-address sticky
+ switchport port-security
+ no lldp transmit
+ no lldp receive
+ no cdp enable
+ spanning-tree portfast edge
+ spanning-tree bpdufilter enable
+!
+interface Ethernet1/2
+ description PC - VLAN 56
+ switchport access vlan 56
+ switchport mode access
+ switchport port-security maximum 5
+ switchport port-security mac-address sticky
+ switchport port-security
+ no lldp transmit
+ no lldp receive
+ no cdp enable
+ spanning-tree portfast edge
+ spanning-tree bpdufilter enable
+!
+interface Ethernet1/3
+ description PC - VLAN 56
+ switchport access vlan 56
+ switchport mode access
+ switchport port-security maximum 5
+ switchport port-security mac-address sticky
+ switchport port-security
+ no lldp transmit
+ no lldp receive
+ no cdp enable
+ spanning-tree portfast edge
+ spanning-tree bpdufilter enable
+!
+interface Vlan99
+ ip address 172.19.1.4 255.255.255.240
+ ip access-group ACL-MGMT in
+!
+ip default-gateway 172.19.1.1
+ip forward-protocol nd
+!
+no ip http server
+!
+ip ssh version 2
+ip ssh server algorithm encryption aes128-ctr aes256-ctr aes128-cbc 3des-cbc aes192-cbc aes256-cbc
+ip ssh client algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+!
+ip access-list standard SNMP-RO-ACL
+ permit 172.19.204.254
+ permit 172.19.1.0 0.0.0.15
+ deny   any log
+!
+ip access-list extended ACL-MGMT
+ remark --- PERMITIR SSH desde routers sede ---
+ permit tcp host 172.19.1.2 172.19.1.0 0.0.0.15 eq 22
+ remark --- PERMITIR SSH desde servidor ficticio ---
+ permit tcp host 172.19.204.254 172.19.1.0 0.0.0.15 eq 22
+ deny   ip any any log
+!
+logging facility local0
+logging source-interface Vlan99
+logging host 172.19.204.254
+!
+!
+snmp-server community TFG-RO RO SNMP-RO-ACL
+snmp-server trap-source Vlan99
+snmp-server location Sede_1_Switch_Acceso
+snmp-server contact majaraiz@alu.ucam.edu
+snmp-server chassis-id Switch_sede1
+snmp-server enable traps snmp linkdown linkup
+snmp-server host 172.19.204.254 version 2c TFG-RO
+!
+!
+!
+control-plane
+!
+banner motd ^CCC
+================================================================
+     Metodologia de Automatizacion de Redes para PYMEs
+          Trabajo Fin de Grado - MAJO
+
+            ACCESO RESTRINGIDO
+================================================================
+^C
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ access-class ACL-MGMT in
+ exec-timeout 30 0
+ transport input ssh
+!
+ntp server 172.19.204.254
+!
+!
+end
+
+Switch_sede1#

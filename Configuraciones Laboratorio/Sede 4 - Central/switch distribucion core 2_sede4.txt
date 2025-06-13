@@ -1,0 +1,227 @@
+SW-Core2-Sede4#sh run
+Building configuration...
+
+Current configuration : 4606 bytes
+!
+! Last configuration change at 14:34:24 UTC Sat May 31 2025 by admin
+!
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+service compress-config
+!
+hostname SW-Core2-Sede4
+!
+boot-start-marker
+boot-end-marker
+!
+!
+enable secret 5 $1$Bb6o$tlC5cjX7z5ptlcz602IN90
+!
+username admin privilege 15 secret 5 $1$kUQV$t3W0WnIkdqSvmGMYxmbqA/
+aaa new-model
+!
+!
+aaa authentication login default local
+!
+!
+!
+!
+!
+!
+aaa session-id common
+!
+!
+!
+!
+!
+vtp mode transparent
+!
+!
+!
+ip domain-name eveng.com
+ip cef
+no ipv6 cef
+!
+!
+!
+spanning-tree mode rapid-pvst
+spanning-tree portfast edge bpduguard default
+spanning-tree extend system-id
+spanning-tree vlan 2,56,99 priority 8192
+!
+!
+vlan 2
+ name main
+!
+vlan 56
+ name invitados
+!
+vlan 99
+ name gestion
+!
+vlan 999
+ name nativa_sin_uso
+ shutdown
+no cdp run
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Port-channel1
+ description Enlace entre cores - Trunk
+ switchport trunk allowed vlan 2,56,99
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 999
+ switchport mode trunk
+ switchport nonegotiate
+ spanning-tree guard loop
+!
+interface Ethernet0/0
+ description Conexion a Router Sede4_backup
+ switchport trunk allowed vlan 2,56,99
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 999
+ switchport mode trunk
+ switchport nonegotiate
+ duplex full
+!
+interface Ethernet0/1
+ description Enlace Port-Channel hacia SW-Core1-Sede4 - Miembro 1
+ switchport trunk allowed vlan 2,56,99
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 999
+ switchport mode trunk
+ switchport nonegotiate
+ duplex full
+ channel-group 1 mode active
+!
+interface Ethernet0/2
+ description Enlace Port-Channel hacia SW-Core1-Sede4 - Miembro 2
+ switchport trunk allowed vlan 2,56,99
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 999
+ switchport mode trunk
+ switchport nonegotiate
+ duplex full
+ channel-group 1 mode active
+!
+interface Ethernet0/3
+ shutdown
+ duplex full
+!
+interface Ethernet1/0
+ description Enlace a SW-Acceso3-Sede4
+ switchport trunk allowed vlan 2,56,99
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 999
+ switchport mode trunk
+ switchport nonegotiate
+ duplex full
+ spanning-tree guard root
+!
+interface Ethernet1/1
+ description Enlace a SW-Acceso4-Sede4
+ switchport trunk allowed vlan 2,56,99
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 999
+ switchport mode trunk
+ switchport nonegotiate
+ duplex full
+ spanning-tree guard root
+!
+interface Ethernet1/2
+ description Enlace a SW-Acceso1-Sede4
+ switchport trunk allowed vlan 2,56,99
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 999
+ switchport mode trunk
+ switchport nonegotiate
+ duplex full
+ spanning-tree guard root
+!
+interface Ethernet1/3
+ description Enlace a SW-Acceso2-Sede4
+ switchport trunk allowed vlan 2,56,99
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 999
+ switchport mode trunk
+ switchport nonegotiate
+ duplex full
+ spanning-tree guard root
+!
+interface Vlan99
+ ip address 172.19.4.5 255.255.255.240
+ ip access-group ACL-MGMT in
+!
+ip default-gateway 172.19.4.1
+ip forward-protocol nd
+!
+no ip http server
+!
+ip route 172.19.204.254 255.255.255.255 172.19.4.1
+ip ssh version 2
+ip ssh server algorithm encryption aes128-ctr aes256-ctr aes128-cbc 3des-cbc aes                                                                                                             192-cbc aes256-cbc
+ip ssh client algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+!
+ip access-list standard SNMP-RO-ACL
+ permit 172.19.204.254
+ permit 172.19.4.0 0.0.0.15
+ deny   any log
+!
+ip access-list extended ACL-MGMT
+ permit tcp host 172.19.4.2 172.19.4.0 0.0.0.15 eq 22
+ permit tcp host 172.19.4.3 172.19.4.0 0.0.0.15 eq 22
+ permit tcp host 172.19.204.254 172.19.4.0 0.0.0.15 eq 22
+ deny   ip any any log
+!
+logging facility local0
+logging source-interface Vlan99
+logging host 172.19.204.254
+!
+!
+snmp-server community TFG-RO RO SNMP-RO-ACL
+snmp-server trap-source Vlan99
+snmp-server location Sede_Central_Switch_Core
+snmp-server contact majaraiz@alu.ucam.edu
+snmp-server chassis-id SW-Core2-Sede4
+snmp-server enable traps snmp linkdown linkup
+snmp-server host 172.19.204.254 version 2c TFG-RO
+!
+!
+!
+control-plane
+!
+banner motd ^C
+================================================================
+     Metodologia de Automatizacion de Redes para PYMEs
+          Trabajo Fin de Grado - MAJO
+               ACCESO RESTRINGIDO
+================================================================
+^C
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ access-class ACL-MGMT in
+ exec-timeout 30 0
+ transport input ssh
+!
+ntp server 172.19.204.254
+!
+!
+end
+
+SW-Core2-Sede4#

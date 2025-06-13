@@ -1,0 +1,360 @@
+Sede10_ppal#sh run
+Building configuration...
+
+Current configuration : 8778 bytes
+!
+! Last configuration change at 09:27:04 UTC Sun Jun 1 2025 by admin
+upgrade fpd auto
+version 15.3
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+service sequence-numbers
+!
+hostname Sede10_ppal
+!
+boot-start-marker
+boot-end-marker
+!
+aqm-register-fnf
+!
+logging buffered 32768
+logging console critical
+logging monitor warnings
+enable secret 5 $1$7DMT$XVvNHtvSu.owLyhIois7X1
+!
+aaa new-model
+!
+!
+aaa authentication login default local
+!
+!
+!
+!
+!
+aaa session-id common
+!
+!
+!
+ip vrf gestion
+ rd 65000:99
+ route-target export 65000:99
+ route-target import 65000:99
+!
+ip vrf invitados
+ rd 65000:2
+ route-target export 65000:2
+ route-target import 65000:2
+!
+ip vrf main
+ rd 65000:1
+ route-target export 65000:1
+ route-target import 65000:1
+!
+!
+!
+!
+ip domain name eveng.com
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+username admin privilege 15 secret 5 $1$7CoA$/IXh7fvSRTlmpRnZOnOuk1
+!
+redundancy
+!
+!
+track 1 interface FastEthernet1/0 line-protocol
+ delay down 10 up 10
+!
+ip ssh version 2
+!
+crypto keyring CLAVE1 vrf main
+  pre-shared-key address 172.26.28.25 key C1fr4d0
+  pre-shared-key address 172.26.28.26 key C1fr4d0
+!
+crypto isakmp policy 10
+ encr 3des
+ hash md5
+ authentication pre-share
+ lifetime 21600
+crypto isakmp invalid-spi-recovery
+crypto isakmp keepalive 60
+crypto isakmp profile PERFIL1
+   vrf main
+   keyring CLAVE1
+   match identity address 172.26.28.25 255.255.255.255 main
+   match identity address 172.26.28.26 255.255.255.255 main
+   keepalive 60 retry 2
+!
+crypto ipsec security-association lifetime seconds 18000
+crypto ipsec security-association replay disable
+!
+crypto ipsec transform-set transformada esp-3des esp-sha-hmac
+ mode tunnel
+crypto ipsec df-bit clear
+!
+!
+!
+crypto map mapacifrado local-address Loopback55
+crypto map mapacifrado 2000 ipsec-isakmp
+ description Tunel IPSec VRF main contra Sede Central
+ set peer 172.26.28.25
+ set peer 172.26.28.26
+ set security-association idle-time 600
+ set transform-set transformada
+ set isakmp-profile PERFIL1
+ match address 2000
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ description Loopback gestion - Sede 10
+ ip vrf forwarding gestion
+ ip address 172.19.10.20 255.255.255.255
+!
+interface Loopback55
+ description Origen IPSec VRF main
+ ip vrf forwarding main
+ ip address 172.26.28.30 255.255.255.255
+!
+interface FastEthernet0/0
+ description LAN
+ no ip address
+ duplex full
+!
+interface FastEthernet0/0.2
+ description Subinterfaz LAN VRF main
+ encapsulation dot1Q 2
+ ip vrf forwarding main
+ ip address 192.168.10.2 255.255.255.0
+ ip flow ingress
+ standby 2 ip 192.168.10.1
+ standby 2 priority 105
+ standby 2 preempt delay minimum 60
+ standby 2 name HSRP-MAIN
+ standby 2 track 1 decrement 15
+!
+interface FastEthernet0/0.56
+ description Subinterfaz LAN VRF invitados
+ encapsulation dot1Q 56
+ ip vrf forwarding invitados
+ ip address 172.16.10.2 255.255.255.128
+ ip access-group ACL_IN_INVITADOS in
+ ip flow ingress
+ standby 56 ip 172.16.10.1
+ standby 56 priority 105
+ standby 56 preempt delay minimum 60
+ standby 56 name HSRP-invitados
+ standby 56 track 1 decrement 15
+!
+interface FastEthernet0/0.99
+ description Subinterfaz LAN VRF gestion
+ encapsulation dot1Q 99
+ ip vrf forwarding gestion
+ ip address 172.19.10.2 255.255.255.240
+ ip flow ingress
+ standby 99 ip 172.19.10.1
+ standby 99 priority 105
+ standby 99 preempt delay minimum 60
+ standby 99 name HSRP-gestion
+ standby 99 track 1 decrement 15
+!
+interface FastEthernet1/0
+ no ip address
+ duplex full
+!
+interface FastEthernet1/0.100
+ description Subinterfaz WAN VRF main - Conexion MPLS Operador
+ encapsulation dot1Q 100
+ ip vrf forwarding main
+ ip address 10.0.0.51 255.255.255.0
+ ip flow ingress
+ crypto map mapacifrado
+!
+interface FastEthernet1/0.156
+ description Subinterfaz WAN VRF invitados - Conexion MPLS Operador
+ encapsulation dot1Q 156
+ ip vrf forwarding invitados
+ ip address 10.16.0.51 255.255.255.0
+ ip flow ingress
+!
+interface FastEthernet1/0.199
+ description Subinterfaz WAN VRF gestion - Conexion MPLS Operador
+ encapsulation dot1Q 199
+ ip vrf forwarding gestion
+ ip address 10.199.0.51 255.255.255.0
+ ip flow ingress
+!
+router bgp 65000
+ bgp router-id 10.0.0.51
+ bgp log-neighbor-changes
+ no bgp default ipv4-unicast
+ !
+ address-family ipv4 vrf gestion
+  redistribute connected
+  redistribute static
+  neighbor Nube_gestion peer-group
+  neighbor Nube_gestion remote-as 65000
+  neighbor Nube_gestion timers 10 30
+  neighbor Nube_gestion route-map BGPOUT_gestion out
+  neighbor 10.199.0.254 peer-group Nube_gestion
+  neighbor 10.199.0.254 activate
+ exit-address-family
+ !
+ address-family ipv4 vrf invitados
+  redistribute connected
+  redistribute static
+  neighbor Nube_invitados peer-group
+  neighbor Nube_invitados remote-as 65000
+  neighbor Nube_invitados timers 10 30
+  neighbor Nube_invitados route-map BGPOUT_invitados out
+  neighbor 10.16.0.254 peer-group Nube_invitados
+  neighbor 10.16.0.254 activate
+ exit-address-family
+ !
+ address-family ipv4 vrf main
+  redistribute connected
+  redistribute static
+  neighbor Nube_1 peer-group
+  neighbor Nube_1 remote-as 65000
+  neighbor Nube_1 timers 10 30
+  neighbor Nube_1 route-map BGPOUT_main out
+  neighbor 10.0.0.254 peer-group Nube_1
+  neighbor 10.0.0.254 activate
+ exit-address-family
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+ip flow-export source Loopback0
+ip flow-export version 9
+ip flow-export destination 172.19.204.254 2055
+!
+!
+ip access-list standard SNMP-RO-ACL
+ permit 172.19.204.254
+ deny   any log
+ip access-list standard SNMP-RW-ACL
+ permit 172.19.204.254
+ deny   any log
+!
+ip access-list extended ACL-MGMT
+ remark --- PERMITIR SSH desde servidor gestion centralizado ---
+ permit tcp host 172.19.204.254 any eq 22 log
+ deny   ip any any log
+ip access-list extended ACL_IN_INVITADOS
+ remark --- PERMITIR HSRP entre routers ---
+ permit udp any host 224.0.0.2 eq 1985
+ permit udp any any eq 1985
+ remark --- DENEGAR acceso a redes corporativas ---
+ deny   ip 172.16.10.0 0.0.0.127 192.168.0.0 0.0.255.255
+ remark --- DENEGAR acceso a redes de gestion ---
+ deny   ip 172.16.10.0 0.0.0.127 172.19.0.0 0.0.255.255
+ remark --- DENEGAR acceso a otras redes de invitados ---
+ deny   ip 172.16.10.0 0.0.0.127 172.16.0.0 0.0.255.255
+ remark --- DENEGAR acceso a redes internas del operador ---
+ deny   ip 172.16.10.0 0.0.0.127 10.0.0.0 0.255.255.255
+ remark --- PERMITIR solo salida a Internet ---
+ permit ip any any
+!
+!
+ip prefix-list REDESCLIENTE_gestion seq 10 permit 172.19.10.0/28
+ip prefix-list REDESCLIENTE_gestion seq 20 permit 172.19.10.20/32
+!
+ip prefix-list REDESCLIENTE_invitados seq 10 permit 172.16.10.0/25
+!
+ip prefix-list REDESCLIENTE_main seq 10 permit 192.168.10.0/24
+ip prefix-list REDESCLIENTE_main seq 20 permit 172.26.28.30/32
+logging facility local0
+logging source-interface Loopback0 vrf gestion
+logging host 172.19.204.254
+!
+route-map BGPOUT_gestion permit 10
+ match ip address prefix-list REDESCLIENTE_gestion
+ set metric 100
+!
+route-map BGPOUT_invitados permit 10
+ match ip address prefix-list REDESCLIENTE_invitados
+ set metric 100
+!
+route-map BGPOUT_main permit 10
+ match ip address prefix-list REDESCLIENTE_main
+ set metric 100
+!
+route-map BGPOUT_main deny 20
+!
+snmp-server community TFG-RO RO SNMP-RO-ACL
+snmp-server community TFG-RW RW SNMP-RW-ACL
+snmp-server location Sede_10_Router_principal
+snmp-server contact majaraiz@alu.ucam.edu
+snmp-server chassis-id Sede10_ppal
+snmp-server enable traps snmp authentication linkdown linkup coldstart warmstart
+no snmp-server enable traps entity-sensor threshold
+snmp-server enable traps bgp
+snmp-server enable traps config
+snmp-server enable traps hsrp
+snmp-server enable traps ike tunnel start
+snmp-server enable traps ike tunnel stop
+snmp-server enable traps ipsec tunnel start
+snmp-server enable traps ipsec tunnel stop
+snmp-server host 172.19.204.254 version 2c TFG-RO
+!
+access-list 2000 permit ip 192.168.10.0 0.0.0.255 192.168.101.0 0.0.0.255
+!
+!
+!
+control-plane
+!
+!
+mgcp behavior rsip-range tgcp-only
+mgcp behavior comedia-role none
+mgcp behavior comedia-check-media-src disable
+mgcp behavior comedia-sdp-force disable
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+banner motd ^CC
+================================================================
+     Metodologia de Automatizacion de Redes para PYMEs
+          Trabajo Fin de Grado - MAJO
+               ACCESO RESTRINGIDO
+================================================================
+^C
+!
+line con 0
+ stopbits 1
+line aux 0
+ stopbits 1
+line vty 0 4
+ access-class ACL-MGMT in
+ exec-timeout 30 0
+ transport input ssh
+!
+ntp authentication-key 1 md5 0225085A1D03300F787E 7
+ntp authenticate
+ntp trusted-key 1
+ntp source Loopback0
+ntp update-calendar
+ntp server vrf gestion 172.19.204.254 prefer
+!
+end
+
