@@ -54,6 +54,11 @@ python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dis
 
 # Switch de acceso
 python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dispositivo switch_acceso_simple
+
+# Sede redundante
+python scripts/generar_config.py --sede "Soria" --tipo-sede sede_redundante --dispositivo router_redundante_principal
+python scripts/generar_config.py --sede "Soria" --tipo-sede sede_redundante --dispositivo router_redundante_backup
+python scripts/generar_config.py --sede "Soria" --tipo-sede sede_redundante --dispositivo switch_acceso_redundante
 ```
 
 ### Implementación de bloques 
@@ -61,9 +66,20 @@ python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dis
 # Solo cifrado
 python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dispositivo router_simple --bloque-cifrado
 
+python scripts/generar_config.py --sede "Soria" --tipo-sede sede_redundante --dispositivo router_redundante_principal --bloque-cifrado
+python scripts/generar_config.py --sede "Soria" --tipo-sede sede_redundante --dispositivo router_redundante_backup --bloque-cifrado
+
 # Solo gestión
 python scripts/generar_config.py --sede "alcorcon" --tipo-sede sede_simple --dispositivo router_simple --bloque-gestion
+python scripts/generar_config.py --sede "Soria" --tipo-sede sede_redundante --dispositivo router_redundante_principal --bloque-gestion
+python scripts/generar_config.py --sede "Soria" --tipo-sede sede_redundante --dispositivo router_redundante_backup --bloque-gestion
+python scripts/generar_config.py --sede "Soria" --tipo-sede sede_redundante --dispositivo switch_acceso_redundante --bloque-gestion
+
+# Cifrado sede central
+python scripts/generar_config.py --sede "Alcorcon" --tipo-sede sede_simple --dispositivo router_simple --bloque-sede-central-cifrado
+python scripts/generar_config.py --sede "Soria" --tipo-sede sede_redundante --dispositivo router_redundante_principal --bloque-sede-central-cifrado
 ```
+
 
 ## Resultados validados en entorno de laboratorio
 
